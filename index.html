@@ -528,8 +528,9 @@
             if (e.key === '1') { currentLevel = 0; skipCutscene(); }
             if (e.key === '2') { currentLevel = 1; skipCutscene(); }
             if (e.key === '3') { currentLevel = 2; skipCutscene(); }
-            if (e.key === '4') { currentLevel = 3; skipCutscene(); }  // Was 5->4 (level 4)
-            if (e.key === '5') { currentLevel = 3; skipCutscene(); }  // Was 6->5 (level 5/final)
+            if (e.key === '4') { currentLevel = 3; skipCutscene(); }
+            if (e.key === '5') { currentLevel = 4; skipCutscene(); }
+            if (e.key === '6') { currentLevel = 5; skipCutscene(); }
 
             if (e.key === '8') { // For testing: skip to level complete cutscene
                 showLevelCompleteCutscene();
