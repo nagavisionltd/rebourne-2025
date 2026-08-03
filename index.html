@@ -1051,6 +1051,10 @@
                 this.stunned = 300;
                 this.hitFlash = 100; // Flash for 100ms
                 
+                // Hit particles
+                createParticles(this.x, this.y - this.height/2, 'hit', 10);
+                createParticles(this.x, this.y - this.height/2, 'spark', 5);
+                
                 // Knockback physics
                 this.vx = player.facing * 200;
                 this.vy = -80; // upward lift 
