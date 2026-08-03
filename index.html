@@ -1843,8 +1843,9 @@
         function initLevel1() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 1; player.x = 100; player.health = 100; player.energy = 0;
+            currentLevel = 1; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
+            player.y = currentGroundLevel;
             enemies = [ 
                 new Enemy(960, currentGroundLevel, 'grunt'), 
                 new Enemy(1200, currentGroundLevel, 'grunt'),
@@ -1857,8 +1858,9 @@
         function initLevel2() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 2; player.x = 100; player.health = 100; player.energy = 0;
+            currentLevel = 2; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 620; // Lower floor for the rooftop/factory image
+            player.y = currentGroundLevel;
             enemies = [
                 new Enemy(800, currentGroundLevel, 'grunt'),
                 new Enemy(1100, currentGroundLevel, 'security'),
@@ -1875,8 +1877,9 @@
         function initLevel3() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 3; player.x = 100; player.health = 100; player.energy = 0;
+            currentLevel = 3; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
+            player.y = currentGroundLevel;
             enemies = [ 
                 new Enemy(1440, currentGroundLevel, 'heavy'), 
                 new Enemy(1680, currentGroundLevel, 'security')
@@ -1892,7 +1895,6 @@
             stopAllMusic();
             currentLevel = 4; 
             player.x = 200; 
-            player.y = 600; // Start in middle lane
             player.health = 100; 
             player.energy = 0;
             player.facing = 1; // Force facing right for the bike level
@@ -1901,6 +1903,7 @@
             player.targetLane = player.lane;
             player.laneChangeTimer = 0;
             currentGroundLevel = 580; // Highway perspective
+            player.y = currentGroundLevel; // Start in middle lane
             enemies = []; levelBoss = null; projectiles = []; npc = null;
             environmentObjects = [];
             enemiesToSpawnInLevel2 = 20; // Reusing this counter for Level 5 now
@@ -1917,8 +1920,9 @@
         function initLevel5() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 5; player.x = 100; player.health = 100; player.energy = 0;
+            currentLevel = 5; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
+            player.y = currentGroundLevel;
             enemies = [ 
                 new Enemy(960, currentGroundLevel, 'heavy', 300),
                 new Enemy(1200, currentGroundLevel, 'heavy', 300),
