@@ -340,8 +340,7 @@
 
         let level1BackgroundImage;
         let level2RooftopBackgroundImage;
-        let level3JungleBackgroundImage;
-        let level4SunsetBackgroundImage;
+                let level4SunsetBackgroundImage;
         let level5TruckBackgroundImage;
 
         let level5RoadOffset = 0;
@@ -377,8 +376,7 @@
             'images/level_1_background.gif',
             'images/start_screen_background.gif',
             'images/level_2_truck.png',
-            'images/level_3_jungle.png',
-            'images/level_4_sunset.png',
+                        'images/level_4_sunset.png',
             'images/level_5_lab.png',
             'images/google_ai_studio_2025-09-01t15_32_37.197z.png',
             'images/cutscene1.png',
@@ -387,8 +385,7 @@
             'images/who-am-i.png',
             'cutscenes/level_1_cutscene_1-memory-fragments.png',
             'cutscenes/level_2_cutscene_rooftop-realization.png',
-            'cutscenes/level_3_cutscene_identity_crisis.png',
-            'cutscenes/level_4_cutscene_painful-memories.png',
+                        'cutscenes/level_4_cutscene_painful-memories.png',
             'cutscenes/level_5_cutscene_dark-past-revealed.png',
             'cutscenes/ending_cutscene.png',
             // New Jack Rebourne Sprites
@@ -510,7 +507,7 @@
         let lastTime = 0;
 
         let currentGroundLevel = 540;
-        const PLAYER_SPEED = 300;
+        const PLAYER_SPEED = 320;
         const JUMP_VELOCITY = -1100;
         const GRAVITY = 2400;
 
@@ -531,9 +528,8 @@
             if (e.key === '1') { currentLevel = 0; skipCutscene(); }
             if (e.key === '2') { currentLevel = 1; skipCutscene(); }
             if (e.key === '3') { currentLevel = 2; skipCutscene(); }
-            if (e.key === '4') { currentLevel = 3; skipCutscene(); }
-            if (e.key === '5') { currentLevel = 4; skipCutscene(); }
-            if (e.key === '6') { currentLevel = 5; skipCutscene(); }
+            if (e.key === '4') { currentLevel = 3; skipCutscene(); }  // Was 5->4 (level 4)
+            if (e.key === '5') { currentLevel = 3; skipCutscene(); }  // Was 6->5 (level 5/final)
 
             if (e.key === '8') { // For testing: skip to level complete cutscene
                 showLevelCompleteCutscene();
@@ -1496,8 +1492,7 @@
                     gameAssets = assets; // Store loaded assets globally
                     level1BackgroundImage = gameAssets['images/level_1_background.gif'];
                     level2RooftopBackgroundImage = gameAssets['images/google_ai_studio_2025-09-01t15_32_37.197z.png'];
-                    level3JungleBackgroundImage = gameAssets['images/level_3_jungle.png'];
-                    level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png'];
+                                        level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png'];
                     level5TruckBackgroundImage = gameAssets['images/level_2_truck.png'];
 
                     // Jack Rebourne Assets
@@ -1875,29 +1870,12 @@
             level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
         }
 
+        
+
         function initLevel3() {
             backgroundElements = [];
             stopAllMusic();
             currentLevel = 3; player.x = 100; player.health = 100; player.energy = 0;
-            currentGroundLevel = 540;
-            enemies = [ 
-                new Enemy(1200, currentGroundLevel, 'heavy'), 
-                new Enemy(1440, currentGroundLevel, 'security')
-            ];
-            levelBoss = null; projectiles = []; npc = null;
-            environmentObjects = [ 
-                new EnvironmentObject(480, currentGroundLevel, 'chair'), new EnvironmentObject(960, currentGroundLevel, 'lamp'),
-                new EnvironmentObject(720, 0, 'destructible_wall')
-            ];
-            environmentObjects[2].width = 480; environmentObjects[2].height = 360;
-            updateUI();
-            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
-        }
-
-        function initLevel4() {
-            backgroundElements = [];
-            stopAllMusic();
-            currentLevel = 4; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
             enemies = [ 
                 new Enemy(1440, currentGroundLevel, 'heavy'), 
@@ -1909,10 +1887,10 @@
             level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
         }
 
-        function initLevel5() {
+        function initLevel4() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 5; 
+            currentLevel = 4; 
             player.x = 200; 
             player.y = 600; // Start in middle lane
             player.health = 100; 
@@ -1936,10 +1914,10 @@
             level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
         }
         
-        function initLevel6() {
+        function initLevel5() {
             backgroundElements = [];
             stopAllMusic();
-            currentLevel = 6; player.x = 100; player.health = 100; player.energy = 0;
+            currentLevel = 5; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
             enemies = [ 
                 new Enemy(960, currentGroundLevel, 'heavy', 300),
@@ -1962,10 +1940,9 @@
             else if (enemies.length === 0 && !levelBoss) {
                 if (currentLevel === 1) levelBoss = new Boss(1680, currentGroundLevel);
                 else if (currentLevel === 2) levelBoss = new AssassinBoss(1680, currentGroundLevel);
-                else if (currentLevel === 3) levelBoss = new ExecutiveBoss(1680, currentGroundLevel);
-                else if (currentLevel === 4) levelBoss = new HandlerBoss(1680, currentGroundLevel);
-                else if (currentLevel === 5) { /* PoliceBoss handled above */ }
-                else if (currentLevel === 6) showLevelCompleteCutscene();
+                else if (currentLevel === 3) levelBoss = new HandlerBoss(1680, currentGroundLevel);  // Was level 4
+                else if (currentLevel === 4) { /* PoliceBoss handled above */ }  // Was level 5
+                else if (currentLevel === 5) showLevelCompleteCutscene();  // Was level 6
             }
             if (levelBoss && levelBoss.health <= 0) {
                 levelBoss = null;
@@ -1995,10 +1972,9 @@
             const levelCutsceneImages = [
                 'cutscenes/level_1_cutscene_1-memory-fragments.png',
                 'cutscenes/level_2_cutscene_rooftop-realization.png',
-                'cutscenes/level_3_cutscene_identity_crisis.png',
-                'cutscenes/level_4_cutscene_painful-memories.png',
-                'cutscenes/level_5_cutscene_dark-past-revealed.png',
-                'cutscenes/ending_cutscene.png' // Corresponds to level 6 text
+                'cutscenes/level_4_cutscene_painful-memories.png',  // Was level 4, now level 3
+                'cutscenes/level_5_cutscene_dark-past-revealed.png',  // Was level 5, now level 4
+                'cutscenes/ending_cutscene.png'  // Was level 6, now level 5 (final)
             ];
             
             if (currentLevel >= 1 && currentLevel <= 6) {
@@ -2010,13 +1986,11 @@
             } else if (currentLevel === 2) {
                 cutsceneText = '"These moves... I never learned them in medical school."';
             } else if (currentLevel === 3) {
-                cutsceneText = '"Dr. Jack Morrison... was that ever really my name?"';
+                cutsceneText = '"They made me forget... but why?"';  // Was level 4
             } else if (currentLevel === 4) {
-                cutsceneText = '"They made me forget... but why?"';
+                cutsceneText = '"I chose to forget the monster I became..."';  // Was level 5
             } else if (currentLevel === 5) {
-                cutsceneText = '"I chose to forget the monster I became..."';
-            } else if (currentLevel === 6) {
-                cutsceneText = '"...but some things can\'t stay buried."';
+                cutsceneText = '"...but some things can\'t stay buried."';  // Was level 6
             }
             
             textDiv.innerHTML = cutsceneText;
@@ -2566,16 +2540,9 @@
             backgroundElements.forEach(el => el.draw());
         }
 
-        function drawLevel3Background() {
-            if (level3JungleBackgroundImage.complete && level3JungleBackgroundImage.naturalWidth > 0) {
-                ctx.drawImage(level3JungleBackgroundImage, 0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#8B4513'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
-            }
-        }
         
-        function drawLevel4Background() {
+        
+        function drawLevel3Background() {
             if (level4SunsetBackgroundImage.complete && level4SunsetBackgroundImage.naturalWidth > 0) {
                 ctx.drawImage(level4SunsetBackgroundImage, 0, 0, canvas.width, canvas.height);
             } else {
@@ -2584,7 +2551,7 @@
             }
         }
 
-        function drawLevel5Background() {
+        function drawLevel4Background() {
             // === FLAT HORIZONTAL HIGHWAY (side-scrolling) ===
 
             // 1. Night sky gradient
@@ -2642,7 +2609,7 @@
             ctx.restore();
         }
 
-        function drawLevel6Background() {
+        function drawLevel5Background() {
             ctx.fillStyle = '#1C1C1C'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
@@ -2801,10 +2768,9 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 if (currentLevel === 1) drawLevel1Background();
                 else if (currentLevel === 2) drawLevel2Background();
-                else if (currentLevel === 3) drawLevel3Background();
-                else if (currentLevel === 4) drawLevel4Background();
-                else if (currentLevel === 5) drawLevel5Background();
-                else if (currentLevel === 6) drawLevel6Background();
+                else if (currentLevel === 3) drawLevel4Background();  // Was level 4
+                else if (currentLevel === 4) drawLevel5Background();  // Was level 5
+                else if (currentLevel === 5) drawLevel6Background();  // Was level 6
                 
                 // Standard flat rendering for all levels
                 projectiles.forEach(p => p.draw());
