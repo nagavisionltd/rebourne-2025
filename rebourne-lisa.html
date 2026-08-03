@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReBOURNE: Jack Unleashed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 1920px;
+            height: 720px;
+        }
+
+        #gameCanvas {
+            display: block;
+            border: 2px solid #333;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+        }
+        
+        .health-bar, .energy-bar {
+            width: 200px;
+            height: 20px;
+            border: 2px solid #fff;
+            margin: 5px 0;
+            position: relative;
+            background: #333;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4444ff, #6666ff);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .energy-fill.pulse {
+            animation: energyPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes energyPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .cutscene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        #cutsceneImage {
+            width: 100%;
+            height: auto;
+            max-height: 70%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .cutscene-text {
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            text-shadow: 2px 2px 4px #000;
+            width: 80%;
+            border-radius: 10px;
+            opacity: 1;
+            animation: none;
+            background-color: transparent;
+        }
+        
+        .cutscene-skip {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        @keyframes flashRed {
+            0%, 100% { background: #000; }
+            50% { background: #440000; }
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            cursor: pointer;
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+            animation: titleGlow 2s infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: #ff4444;
+            text-shadow: 0 0 10px #ff4444;
+            margin-bottom: 40px;
+        }
+        
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .start-btn:hover {
+            background: #ff6666;
+            transform: scale(1.05);
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 20px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+        }
+        #fullscreenBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #888;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        #fullscreenBtn:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #mobileControls {
+            display: flex !important;
+            background-color: rgba(255, 0, 0, 0.5) !important; 
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            z-index: 150;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .d-pad, .action-buttons {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #mobileControls button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background-color: rgba(80, 80, 80, 0.5);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        #mobileControls button:active {
+            background-color: rgba(120, 120, 120, 0.7);
+        }
+    </style>
+    <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="use-credentials"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swap"></head>
+<body>
+    <div id="gameContainer">
+        <div class="title-screen" id="titleScreen">
+            <img id="startScreenImage" src="images/start_screen_background.gif" alt="Start Screen" style="max-width: 80%; max-height: 80%; object-fit: contain;">
+        </div>
+        
+        <canvas id="gameCanvas" width="1920" height="720"></canvas>
+        <button id="fullscreenBtn" title="Toggle Fullscreen">📺</button>
+        
+        <div class="game-ui">
+            <div>Dr. Jack</div>
+            <div class="health-bar">
+                <div class="health-fill" id="healthBar" style="width: 100%;"></div>
+            </div>
+            <div>Energy</div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energyBar" style="width: 0%;"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            A-Light | S-Heavy | E-Interact | Arrows-Move | A+S (Full Energy)-Special
+        </div>
+        
+        <div class="cutscene" id="cutscene">
+             <img id="cutsceneImage" src="">
+            <div class="cutscene-text" id="cutsceneText"></div>
+            <div class="cutscene-skip">Press SPACE to skip</div>
+        </div>
+
+        <div id="mobileControls">
+            <div class="d-pad">
+                <button id="mc-left">◀</button>
+                <button id="mc-right">▶</button>
+            </div>
+            <div class="action-buttons">
+                <button id="mc-jump">⬆️</button>
+                <button id="mc-punch">A</button>
+                <button id="mc-kick">S</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const gameContainer = document.getElementById('gameContainer');
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                gameContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        function preloadImages(imagePaths) {
+            const promises = [];
+            const loadedImages = {};
+
+            imagePaths.forEach(path => {
+                const img = new Image();
+                loadedImages[path] = img;
+                const promise = new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => {
+                        console.warn(`Image load warning: ${path} (file may not exist yet)`);
+                        resolve(); // Don't fail, just warn
+                    };
+                });
+                img.src = path;
+                promises.push(promise);
+            });
+
+            return Promise.all(promises).then(() => loadedImages);
+        }
+
+        let level1BackgroundImage;
+        let level2TruckBackgroundImage;
+        let level3JungleBackgroundImage;
+        let level4SunsetBackgroundImage;
+        let level5LabBackgroundImage;
+
+        // Margery Animation Frames
+        let margeryIdleLeftFrames = [];
+        let margeryIdleRightFrames = [];
+        let margeryJumpLeftFrames = [];
+        let margeryJumpRightFrames = [];
+        let margeryRunLeftFrames = [];
+        let margeryRunRightFrames = [];
+
+        let cutsceneImages = [];
+
+        const margeryAnimations = {
+            idleLeft: { spriteSheet: margeryIdleLeftFrames, frames: [0, 1], frameRate: 4 },
+            idleRight: { spriteSheet: margeryIdleRightFrames, frames: [0, 1], frameRate: 4 },
+            jumpLeft: { spriteSheet: margeryJumpLeftFrames, frames: [0], frameRate: 1 },
+            jumpRight: { spriteSheet: margeryJumpRightFrames, frames: [0], frameRate: 1 },
+            runLeft: { spriteSheet: margeryRunLeftFrames, frames: [0, 1, 2, 3, 4, 5], frameRate: 10 },
+            runRight: { spriteSheet: margeryRunRightFrames, frames: [0, 1, 2, 3, 4, 5], frameRate: 10 }
+        };
+
+        const allImagePaths = [
+            'images/level_1_background.gif',
+            'images/start_screen_background.gif',
+            'images/dr_jack_/idle.png',
+            'images/dr_jack_/jump_1.png',
+            'images/dr_jack_/jump_2.png',
+            'images/dr_jack_/jump_3.png',
+            'images/dr_jack_/jump_4.png',
+            'images/dr_jack_/kick_1.png',
+            'images/dr_jack_/kick_2.png',
+            'images/dr_jack_/kick_3.png',
+            'images/dr_jack_/punch_0.png',
+            'images/dr_jack_/punch_1.png',
+            'images/dr_jack_/punch_2.png',
+            'images/dr_jack_/punch_3.png',
+            'images/dr_jack_/run_1.png',
+            'images/dr_jack_/run_2.png',
+            'images/dr_jack_/run_3.png',
+            'images/dr_jack_/run_4.png',
+            'images/dr_jack_/run_5.png',
+            'images/level_2_truck.png',
+            'images/level_3_jungle.png',
+            'images/level_4_sunset.png',
+            'images/level_5_lab.png',
+            'images/cutscene1.png',
+            'images/cutscene2.png',
+            'images/cutscene3.png',
+            'images/who-am-i.png',
+            'cutscenes/level_1_cutscene_1-memory-fragments.png',
+            'cutscenes/level_2_cutscene_rooftop-realization.png',
+            'cutscenes/level_3_cutscene_identity_crisis.png',
+            'cutscenes/level_4_cutscene_painful-memories.png',
+            'cutscenes/level_5_cutscene_dark-past-revealed.png',
+            'cutscenes/ending_cutscene.png',
+            'images/Margery_Limited (1)/Margery_Idle Left_0.png',
+            'images/Margery_Limited (1)/Margery_Idle Left_1.png',
+            'images/Margery_Limited (1)/Margery_Idle Right_0.png',
+            'images/Margery_Limited (1)/Margery_Idle Right_1.png',
+            'images/Margery_Limited (1)/Margery_Jump Left_0.png',
+            'images/Margery_Limited (1)/Margery_Jump Right_0.png',
+            'images/Margery_Limited (1)/Margery_Run Left_0.png',
+            'images/Margery_Limited (1)/Margery_Run Left_1.png',
+            'images/Margery_Limited (1)/Margery_Run Left_2.png',
+            'images/Margery_Limited (1)/Margery_Run Left_3.png',
+            'images/Margery_Limited (1)/Margery_Run Left_4.png',
+            'images/Margery_Limited (1)/Margery_Run Left_5.png',
+            'images/Margery_Limited (1)/Margery_Run Right_0.png',
+            'images/Margery_Limited (1)/Margery_Run Right_1.png',
+            'images/Margery_Limited (1)/Margery_Run Right_2.png',
+            'images/Margery_Limited (1)/Margery_Run Right_3.png',
+            'images/Margery_Limited (1)/Margery_Run Right_4.png',
+            'images/Margery_Limited (1)/Margery_Run Right_5.png',
+            // Enemy sprites (will load if they exist)
+            'images/enemies/grunt_idle.png',
+            'images/enemies/grunt_run_1.png',
+            'images/enemies/grunt_run_2.png',
+            'images/enemies/grunt_attack.png',
+            'images/enemies/grunt_stunned.png',
+            'images/enemies/heavy_idle.png',
+            'images/enemies/heavy_run.png',
+            'images/enemies/heavy_attack.png',
+            'images/enemies/security_idle.png',
+            'images/enemies/security_run.png',
+            'images/enemies/security_attack.png',
+            // Boss sprites
+            'images/bosses/police_boss_idle.png',
+            'images/bosses/police_boss_attack.png',
+            'images/bosses/police_boss_block.png',
+            'images/bosses/assassin_idle.png',
+            'images/bosses/assassin_attack.png',
+            'images/bosses/executive_idle.png',
+            'images/bosses/executive_charge.png',
+            'images/bosses/handler_idle.png',
+            'images/bosses/handler_teleport.png'
+        ];
+        
+        let currentLevel = 0;
+        const startScreenMusic = new Audio('Music/Pixelated Groove Machine.mp3');
+        startScreenMusic.loop = true;
+        startScreenMusic.volume = 0.5;
+
+        const level1Music = new Audio('Music/Neon Strut.mp3');
+        level1Music.loop = true;
+        level1Music.volume = 0.5;
+
+        const level2Music = new Audio('Music/cyberpunk-street.mp3');
+        level2Music.loop = true;
+        level2Music.volume = 0.5;
+
+        function playStartScreenMusic() {
+            startScreenMusic.play().catch(e => console.error("Error playing start screen music:", e));
+        }
+
+        function playLevel1Music() {
+            startScreenMusic.pause();
+            startScreenMusic.currentTime = 0;
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        function playLevel2Music() {
+            level1Music.pause();
+            level1Music.currentTime = 0;
+            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+        }
+
+        let playerAnimations;
+
+        let drJackIdleFrames = [];
+        let drJackJumpFrames = [];
+        let drJackKickFrames = [];
+        let drJackPunchFrames = [];
+        let drJackRunFrames = [];
+
+        // Enemy animation frames
+        let gruntIdleFrames = [];
+        let gruntRunFrames = [];
+        let gruntAttackFrames = [];
+        let heavyIdleFrames = [];
+        let heavyRunFrames = [];
+        let heavyAttackFrames = [];
+        let securityIdleFrames = [];
+        let securityRunFrames = [];
+        let securityAttackFrames = [];
+
+        // Boss animation frames
+        let policeBossIdleFrames = [];
+        let policeBossAttackFrames = [];
+        let policeBossBlockFrames = [];
+        let assassinIdleFrames = [];
+        let assassinAttackFrames = [];
+        let executiveIdleFrames = [];
+        let executiveChargeFrames = [];
+        let handlerIdleFrames = [];
+        let handlerTeleportFrames = [];
+
+        let gameState = 'title';
+        
+        let cutsceneTimer = 0;
+        let level2EnemySpawnTimer = 0;
+        let enemiesToSpawnInLevel2 = 10;
+        let gameStarted = false;
+        let lastTime = 0;
+
+        let currentGroundLevel = 540;
+        const PLAYER_SPEED = 300;
+        const JUMP_VELOCITY = -900;
+        const GRAVITY = 2880;
+
+        let player = null;
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if ((gameState === 'cutscene' || gameState === 'ending') && e.key === ' ') skipCutscene();
+            if (e.key === '8') {
+                showLevelCompleteCutscene();
+            }
+        });
+        document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+        
+        function setupMobileControls() {
+            const controls = [
+                { id: 'mc-left', key: 'arrowleft' },
+                { id: 'mc-right', key: 'arrowright' },
+                { id: 'mc-jump', key: 'arrowup' },
+                { id: 'mc-punch', key: 'a' },
+                { id: 'mc-kick', key: 's' }
+            ];
+
+            controls.forEach(control => {
+                const button = document.getElementById(control.id);
+                if (button) {
+                    button.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        keys[control.key] = true;
+                    }, { passive: false });
+
+                    button.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        keys[control.key] = false;
+                    }, { passive: false });
+                }
+            });
+        }
+        
+        let enemies = [];
+        let levelBoss = null;
+        let environmentObjects = [];
+        let projectiles = [];
+        let npc = null;
+        let backgroundElements = [];
+        let particles = []; // NEW: Particle system
+
+        // ==================== PARTICLE SYSTEM ====================
+        class Particle {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.life = 1.0; // 1 second lifetime
+                
+                if (type === 'hit') {
+                    this.vx = (Math.random() - 0.5) * 400;
+                    this.vy = (Math.random() - 0.5) * 400;
+                    this.size = 4 + Math.random() * 4;
+                    this.color = `hsl(${Math.random() * 60 + 10}, 100%, 50%)`; // Orange/yellow/red
+                    this.decay = 2.0;
+                } else if (type === 'special') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 200 + Math.random() * 300;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.size = 6 + Math.random() * 6;
+                    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 60%)`; // Cyan/blue
+                    this.decay = 1.5;
+                } else if (type === 'explosion') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 100 + Math.random() * 400;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.size = 8 + Math.random() * 12;
+                    this.color = `hsl(${Math.random() * 40 + 10}, 100%, ${50 + Math.random() * 30}%)`;
+                    this.decay = 1.2;
+                    this.vy -= 100; // Slight upward bias
+                } else if (type === 'spark') {
+                    this.vx = (Math.random() - 0.5) * 600;
+                    this.vy = (Math.random() - 0.5) * 600;
+                    this.size = 2 + Math.random() * 3;
+                    this.color = '#ffffff';
+                    this.decay = 3.0;
+                }
+            }
+
+            update(deltaTime) {
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+                this.vy += 200 * deltaTime; // Gravity
+                this.life -= this.decay * deltaTime;
+                this.size *= 0.98; // Shrink over time
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add glow effect
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createParticles(x, y, type, count = 1) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, type));
+            }
+        }
+
+        function updateParticles(deltaTime) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(deltaTime);
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(p => p.draw());
+        }
+
+        // ==================== BACKGROUND ELEMENTS ====================
+        class BackgroundElement {
+            constructor(type) {
+                this.type = type;
+                this.x = Math.random() * canvas.width;
+                if (type === 'cloud') {
+                    this.y = Math.random() * 200;
+                    this.width = 100 + Math.random() * 100;
+                    this.height = 30 + Math.random() * 30;
+                    this.speed = 30 + Math.random() * 30;
+                } else {
+                    this.y = 100 + Math.random() * 150;
+                    this.width = 20;
+                    this.height = 10;
+                    this.speed = 120 + Math.random() * 120;
+                }
+            }
+            update(deltaTime, playerVx = 0) {
+                const parallaxSpeedFactor = 0.2;
+                this.x -= (this.speed + playerVx * parallaxSpeedFactor) * deltaTime;
+                if (this.x + this.width < 0) {
+                    this.x = canvas.width;
+                }
+            }
+            draw() {
+                if (this.type === 'cloud') {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                } else {
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x + this.width / 2, this.y + this.height);
+                    ctx.lineTo(this.x + this.width, this.y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+
+        // ==================== NPC ====================
+        class NPC {
+            constructor(x, y) {
+                this.x = x; this.y = y; 
+                this.width = 48; this.height = 48;
+                this.speed = 150; this.followDistance = 80;
+                this.currentAnimation = 'idleRight';
+                this.currentFrame = 0;
+                this.frameTimer = 0;
+                this.facing = 1;
+            }
+            update(deltaTime) {
+                const distToPlayer = this.x - player.x;
+                let moving = false;
+                if (Math.abs(distToPlayer) > this.followDistance) {
+                    this.x += Math.sign(player.x - this.x) * this.speed * deltaTime;
+                    this.facing = Math.sign(player.x - this.x);
+                    moving = true;
+                }
+
+                if (moving) {
+                    this.currentAnimation = this.facing === 1 ? 'runRight' : 'runLeft';
+                } else {
+                    this.currentAnimation = this.facing === 1 ? 'idleRight' : 'idleLeft';
+                }
+
+                this.frameTimer += deltaTime;
+                const animation = margeryAnimations[this.currentAnimation];
+                if (this.frameTimer >= 1 / animation.frameRate) {
+                    this.currentFrame = (this.currentFrame + 1) % animation.frames.length;
+                    this.frameTimer = 0;
+                }
+            }
+            draw() {
+                ctx.save();
+                const animation = margeryAnimations[this.currentAnimation];
+                const currentSprite = animation.spriteSheet[this.currentFrame];
+                if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                    ctx.drawImage(currentSprite, this.x - this.width / 2, this.y - this.height, this.width, this.height);
+                } else {
+                    ctx.fillStyle = 'blue';
+                    ctx.fillRect(this.x - this.width / 2, this.y - this.height, this.width, this.height);
+                }
+            }
+        }
+
+        // ==================== PROJECTILE ====================
+        class Projectile {
+            constructor(x, y, vx, vy, type = 'bottle') {
+                this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.type = type;
+                this.width = type === 'knife' ? 5 : 10;
+                this.height = type === 'knife' ? 15 : 20;
+                this.rotation = 0; this.gravity = 1200;
+            }
+            update(deltaTime) {
+                this.x += this.vx * deltaTime; 
+                this.vy += this.gravity * deltaTime;
+                this.y += this.vy * deltaTime;
+                this.rotation += 12 * Math.sign(this.vx) * deltaTime;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                let color = '#ccc';
+                switch(this.type){
+                    case 'bottle': color = '#6A8A6A'; break;
+                    case 'chair': color = '#8B4513'; break;
+                    case 'lamp': color = '#aab8c2'; break;
+                    case 'monitor': color = '#333'; break;
+                    case 'knife': color = '#c0c0c0'; break;
+                }
+                ctx.fillStyle = color;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                ctx.restore();
+            }
+        }
+
+        // ==================== ENVIRONMENT OBJECT ====================
+        class EnvironmentObject {
+            constructor(x, y, type) {
+                this.x = x; this.y = y; this.type = type;
+                this.width = (type==='chair') ? 30 : (type==='lamp') ? 15 : (type==='monitor') ? 25 : 10; 
+                this.height = (type==='chair') ? 40 : (type==='lamp') ? 50 : (type==='monitor') ? 20 : 20;
+                this.health = 1; 
+                if(type === 'laser') this.active = true;
+            }
+            draw() {
+                if (['bottle', 'chair', 'lamp', 'monitor'].includes(this.type)) {
+                    let color = '#ccc';
+                    switch(this.type){
+                        case 'bottle': color = '#6A8A6A'; break;
+                        case 'chair': color = '#8B4513'; break;
+                        case 'lamp': color = '#aab8c2'; break;
+                        case 'monitor': color = '#333'; break;
+                    }
+                    ctx.fillStyle = color;
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                } else if (this.type === 'destructible_wall') {
+                    ctx.fillStyle = 'rgba(200, 200, 220, 0.5)';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                } else if (this.type === 'laser') {
+                    if (Math.floor(Date.now() / 2000) % 2 === 0) {
+                        this.active = true;
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                        ctx.fillRect(this.x, 0, this.width, canvas.height);
+                    } else {
+                        this.active = false;
+                    }
+                }
+            }
+        }
+        
+        // ==================== ENEMY ====================
+        class Enemy {
+            constructor(x, y, type = 'grunt') {
+                this.x = x; this.y = y; this.type = type;
+                this.width = type === 'heavy' ? 67 : 52; this.height = type === 'heavy' ? 97 : 82;
+                this.health = type === 'grunt' ? 25 : (type === 'heavy' ? 50 : 35);
+                this.maxHealth = this.health;
+                this.facing = -1; this.state = 'idle'; this.attackCooldown = 0; this.stunned = 0;
+                this.speed = (type === 'heavy' ? 18 : (type === 'security' ? 42 : 30));
+                this.vy = 0;
+                this.currentFrame = 0;
+                this.frameTimer = 0;
+            }
+            update(deltaTime) {
+                if (this.y < currentGroundLevel) {
+                    this.vy += GRAVITY * deltaTime;
+                    this.y += this.vy * deltaTime;
+                    if (this.y >= currentGroundLevel) {
+                        this.y = currentGroundLevel;
+                    }
+                    return;
+                }
+
+                if (this.stunned > 0) { this.stunned -= deltaTime * 1000; return; }
+                const distToPlayer = this.x - player.x;
+                const attackRange = this.type === 'heavy' ? 70 : 60;
+                const followRange = 400;
+                if (Math.abs(distToPlayer) > followRange) { /* idle */ } 
+                else if (Math.abs(distToPlayer) > attackRange) {
+                    this.x += (distToPlayer > 0 ? -1 : 1) * this.speed * deltaTime;
+                    this.facing = distToPlayer > 0 ? -1 : 1;
+                }
+                if (Math.abs(distToPlayer) < attackRange && this.attackCooldown <= 0) this.attack();
+                if (this.attackCooldown > 0) this.attackCooldown -= deltaTime * 1000;
+                
+                // Update animation frame
+                this.frameTimer += deltaTime;
+                const animType = this.getAnimationType();
+                const animState = this.getAnimationState();
+                const animation = enemyAnimations[animType][animState];
+                if (animation && this.frameTimer >= 1 / animation.frameRate) {
+                    this.currentFrame = (this.currentFrame + 1) % animation.frames.length;
+                    this.frameTimer = 0;
+                }
+            }
+            
+            getAnimationType() {
+                if (this.type === 'heavy') return 'heavy';
+                if (this.type === 'security') return 'security';
+                return 'grunt';
+            }
+            
+            getAnimationState() {
+                if (this.stunned > 0) return 'stunned';
+                if (this.attackCooldown > 500) return 'attack';
+                if (Math.abs(this.x - player.x) < 400 && Math.abs(this.x - player.x) > 60) return 'run';
+                return 'idle';
+            }
+            
+            attack() {
+                const damage = this.type === 'heavy' ? 12 : 8;
+                this.attackCooldown = (this.type === 'heavy' ? 1500 : (this.type === 'security' ? 750 : 1000));
+                if (Math.abs(this.x - player.x) < this.width && player.invulnerable <= 0) {
+                    player.health = Math.max(0, player.health - damage);
+                    player.energy = Math.min(player.maxEnergy, player.energy + 3);
+                    player.invulnerable = 500;
+                    createParticles(player.x, player.y - player.height/2, 'hit', 8);
+                    updateUI();
+                }
+            }
+            takeDamage(damage) {
+                this.health -= damage; this.stunned = 250;
+                createParticles(this.x, this.y - this.height/2, 'hit', 10);
+                createParticles(this.x, this.y - this.height/2, 'spark', 5);
+                if (this.health <= 0) {
+                    player.energy = Math.min(player.maxEnergy, player.energy + 10);
+                    createParticles(this.x, this.y - this.height/2, 'explosion', 20);
+                    return true;
+                }
+                return false;
+            }
+            draw() {
+                ctx.save();
+                
+                const animType = this.getAnimationType();
+                const animState = this.getAnimationState();
+                const animation = enemyAnimations[animType][animState];
+                
+                let spriteDrawn = false;
+                
+                if (animation && animation.spriteSheet.length > 0) {
+                    const frameIndex = animation.frames[this.currentFrame] || 0;
+                    const currentSprite = animation.spriteSheet[frameIndex];
+                    
+                    if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                        if (this.facing === -1) {
+                            ctx.translate(this.x + this.width / 2, this.y);
+                            ctx.scale(-1, 1);
+                            ctx.drawImage(currentSprite, -this.width / 2, -this.height, this.width, this.height);
+                        } else {
+                            ctx.drawImage(currentSprite, this.x - this.width / 2, this.y - this.height, this.width, this.height);
+                        }
+                        spriteDrawn = true;
+                    }
+                }
+                
+                if (!spriteDrawn) {
+                    let color = this.stunned > 0 ? '#ff9999' : '#ff4444';
+                    if(this.type === 'heavy') color = this.stunned > 0 ? '#aa6666' : '#884444';
+                    if(this.type === 'security') color = this.stunned > 0 ? '#6666aa' : '#444488';
+                    ctx.fillStyle = color;
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                }
+                
+                if (this.health < this.maxHealth) {
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(this.x - 20, this.y - this.height - 10, 40, 4);
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(this.x - 20, this.y - this.height - 10, 40 * (this.health / this.maxHealth), 4);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        // ==================== BOSS ====================
+        class Boss extends Enemy {
+             constructor(x, y) {
+                super(x, y, 'boss');
+                this.width = 90; this.height = 120; this.health = 150; this.maxHealth = 150;
+            }
+            draw() {
+                ctx.save();
+                ctx.fillStyle = '#880000';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                ctx.restore();
+                this.drawHealthBar('Security Chief');
+            }
+            drawHealthBar(name) {
+                ctx.fillStyle = '#333';
+                ctx.fillRect(canvas.width/2 - 100, 20, 200, 8);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(canvas.width/2 - 100, 20, 200 * (this.health / this.maxHealth), 8);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText(name, canvas.width/2 - 100, 15);
+            }
+        }
+
+        class PoliceBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); this.type = 'police_boss'; this.health = 200; this.maxHealth = 200;
+                this.isBlocking = false; this.blockTimer = 3000;
+            }
+            update(deltaTime) {
+                super.update(deltaTime); this.blockTimer -= deltaTime * 1000;
+                if (this.blockTimer <= 0) {
+                    this.isBlocking = !this.isBlocking;
+                    this.blockTimer = this.isBlocking ? 2000 : 3000;
+                }
+            }
+            takeDamage(damage) {
+                const inFront = (player.x - this.x) * this.facing > 0;
+                if (this.isBlocking && inFront) return false;
+                return super.takeDamage(damage);
+            }
+            draw() {
+                ctx.save();
+                ctx.fillStyle = '#444488';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                if (this.isBlocking) {
+                    ctx.fillStyle = '#aaaaaa';
+                    ctx.fillRect(this.x + (this.facing * 25), this.y - this.height, 15, this.height);
+                }
+                ctx.restore();
+                this.drawHealthBar('Police Commander');
+            }
+        }
+        
+        class AssassinBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); this.type = 'assassin'; this.health = 180; this.maxHealth = 180;
+                this.dodgeCooldown = 0; this.throwCooldown = 2000;
+            }
+            update(deltaTime) {
+                super.update(deltaTime);
+                const distToPlayer = this.x - player.x;
+                this.speed = 90;
+                if (this.dodgeCooldown > 0) this.dodgeCooldown -= deltaTime * 1000;
+                if (this.throwCooldown > 0) this.throwCooldown -= deltaTime * 1000;
+                if (Math.abs(distToPlayer) < 100 && player.state === 'attacking' && this.dodgeCooldown <= 0) {
+                    this.x += Math.sign(distToPlayer) * 100; this.dodgeCooldown = 1500;
+                }
+                if (this.throwCooldown <= 0) {
+                    projectiles.push(new Projectile(this.x, this.y - 40, -360 * this.facing, -240, 'knife'));
+                    this.throwCooldown = 2500;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.fillStyle = '#333333';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                ctx.restore();
+                this.drawHealthBar('Assassin');
+            }
+        }
+
+        class ExecutiveBoss extends Boss {
+             constructor(x, y) {
+                super(x, y); this.type = 'executive'; this.health = 250; this.maxHealth = 250;
+                this.isCharging = false; this.chargeCooldown = 4000; this.chargeTargetX = 0;
+            }
+            update(deltaTime) {
+                this.chargeCooldown -= deltaTime * 1000;
+                if(this.isCharging){
+                    this.x += Math.sign(this.chargeTargetX - this.x) * 480 * deltaTime;
+                    if(Math.abs(this.x - this.chargeTargetX) < 20){
+                        this.isCharging = false;
+                        this.stunned = 500;
+                    }
+                } else {
+                    super.update(deltaTime);
+                    if(this.chargeCooldown <= 0){
+                        this.isCharging = true;
+                        this.chargeTargetX = player.x;
+                        this.chargeCooldown = 5000;
+                    }
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.fillStyle = '#D4AF37';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                if(this.isCharging) {
+                     ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                     ctx.fillRect(0, this.y - this.height, canvas.width, this.height);
+                }
+                ctx.restore();
+                this.drawHealthBar('Executive');
+            }
+        }
+
+        class HandlerBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); this.type = 'handler'; this.health = 300; this.maxHealth = 300;
+                this.teleportCooldown = 3000;
+            }
+            update(deltaTime) {
+                super.update(deltaTime);
+                this.speed = 120;
+                this.teleportCooldown -= deltaTime * 1000;
+                if (this.teleportCooldown <= 0) {
+                    this.x = player.x + (player.facing * -100);
+                    this.teleportCooldown = 4000;
+                }
+            }
+             draw() {
+                ctx.save();
+                ctx.fillStyle = '#6a0dad';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                ctx.restore();
+                this.drawHealthBar('The Handler');
+            }
+        }
+
+        let gameAssets = {};
+
+        function startGame() {
+            console.log("startGame() called");
+            if (gameStarted) return;
+            gameStarted = true;
+            document.getElementById('titleScreen').style.display = 'none';
+            startScreenMusic.pause();
+            startScreenMusic.currentTime = 0;
+
+            preloadImages(allImagePaths)
+                .then(assets => {
+                    gameAssets = assets;
+                    level1BackgroundImage = gameAssets['images/level_1_background.gif'];
+                    level2TruckBackgroundImage = gameAssets['images/level_2_truck.png'];
+                    level3JungleBackgroundImage = gameAssets['images/level_3_jungle.png'];
+                    level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png'];
+                    level5LabBackgroundImage = gameAssets['images/level_5_lab.png'];
+
+                    drJackIdleFrames[0] = gameAssets['images/dr_jack_/idle.png'];
+                    drJackJumpFrames[0] = gameAssets['images/dr_jack_/jump_1.png'];
+                    drJackJumpFrames[1] = gameAssets['images/dr_jack_/jump_2.png'];
+                    drJackJumpFrames[2] = gameAssets['images/dr_jack_/jump_3.png'];
+                    drJackJumpFrames[3] = gameAssets['images/dr_jack_/jump_4.png'];
+                    drJackKickFrames[0] = gameAssets['images/dr_jack_/kick_1.png'];
+                    drJackKickFrames[1] = gameAssets['images/dr_jack_/kick_2.png'];
+                    drJackKickFrames[2] = gameAssets['images/dr_jack_/kick_3.png'];
+                    drJackPunchFrames[0] = gameAssets['images/dr_jack_/punch_0.png'];
+                    drJackPunchFrames[1] = gameAssets['images/dr_jack_/punch_1.png'];
+                    drJackPunchFrames[2] = gameAssets['images/dr_jack_/punch_2.png'];
+                    drJackPunchFrames[3] = gameAssets['images/dr_jack_/punch_3.png'];
+                    drJackRunFrames[0] = gameAssets['images/dr_jack_/run_1.png'];
+                    drJackRunFrames[1] = gameAssets['images/dr_jack_/run_2.png'];
+                    drJackRunFrames[2] = gameAssets['images/dr_jack_/run_3.png'];
+                    drJackRunFrames[3] = gameAssets['images/dr_jack_/run_4.png'];
+                    drJackRunFrames[4] = gameAssets['images/dr_jack_/run_5.png'];
+
+                    playerAnimations = {
+                        idle: { spriteSheet: drJackIdleFrames, frames: [0], frameRate: 1 },
+                        running: { spriteSheet: drJackRunFrames, frames: [0, 1, 2, 3, 4], frameRate: 10 },
+                        jumping: { spriteSheet: drJackJumpFrames, frames: [0, 1, 2, 3], frameRate: 8 },
+                        punch: { spriteSheet: drJackPunchFrames, frames: [0, 1, 2, 3], frameRate: 8 },
+                        kick: { spriteSheet: drJackKickFrames, frames: [0, 1, 2], frameRate: 8 }
+                    };
+
+                    player = {
+                        x: 100, y: currentGroundLevel, width: 96, height: 96,
+                        health: 100, maxHealth: 100, energy: 0, maxEnergy: 100,
+                        vx: 0, vy: 0, grounded: true, facing: 1,
+                        state: 'idle',
+                        currentAnimation: 'idle',
+                        currentFrame: 0,
+                        frameTimer: 0,
+                        attackCombo: 0, attackCooldown: 0, invulnerable: 0,
+                        lastAttackType: ''
+                    };
+
+                    margeryIdleLeftFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Idle Left_0.png'];
+                    margeryIdleLeftFrames[1] = gameAssets['images/Margery_Limited (1)/Margery_Idle Left_1.png'];
+                    margeryIdleRightFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Idle Right_0.png'];
+                    margeryIdleRightFrames[1] = gameAssets['images/Margery_Limited (1)/Margery_Idle Right_1.png'];
+                    margeryJumpLeftFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Jump Left_0.png'];
+                    margeryJumpRightFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Jump Right_0.png'];
+                    margeryRunLeftFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_0.png'];
+                    margeryRunLeftFrames[1] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_1.png'];
+                    margeryRunLeftFrames[2] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_2.png'];
+                    margeryRunLeftFrames[3] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_3.png'];
+                    margeryRunLeftFrames[4] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_4.png'];
+                    margeryRunLeftFrames[5] = gameAssets['images/Margery_Limited (1)/Margery_Run Left_5.png'];
+                    margeryRunRightFrames[0] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_0.png'];
+                    margeryRunRightFrames[1] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_1.png'];
+                    margeryRunRightFrames[2] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_2.png'];
+                    margeryRunRightFrames[3] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_3.png'];
+                    margeryRunRightFrames[4] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_4.png'];
+                    margeryRunRightFrames[5] = gameAssets['images/Margery_Limited (1)/Margery_Run Right_5.png'];
+
+                    // Load enemy sprites
+                    gruntIdleFrames[0] = gameAssets['images/enemies/grunt_idle.png'];
+                    gruntRunFrames[0] = gameAssets['images/enemies/grunt_run_1.png'];
+                    gruntRunFrames[1] = gameAssets['images/enemies/grunt_run_2.png'];
+                    gruntAttackFrames[0] = gameAssets['images/enemies/grunt_attack.png'];
+                    gruntAttackFrames[1] = gameAssets['images/enemies/grunt_stunned.png'];
+                    
+                    heavyIdleFrames[0] = gameAssets['images/enemies/heavy_idle.png'];
+                    heavyRunFrames[0] = gameAssets['images/enemies/heavy_run.png'];
+                    heavyAttackFrames[0] = gameAssets['images/enemies/heavy_attack.png'];
+                    
+                    securityIdleFrames[0] = gameAssets['images/enemies/security_idle.png'];
+                    securityRunFrames[0] = gameAssets['images/enemies/security_run.png'];
+                    securityAttackFrames[0] = gameAssets['images/enemies/security_attack.png'];
+
+                    cutsceneImages[0] = gameAssets['images/cutscene1.png'];
+                    cutsceneImages[1] = gameAssets['images/cutscene2.png'];
+                    cutsceneImages[2] = gameAssets['images/cutscene3.png'];
+
+                    // Define enemy animations
+                    window.enemyAnimations = {
+                        grunt: {
+                            idle: { spriteSheet: gruntIdleFrames, frames: [0], frameRate: 4 },
+                            run: { spriteSheet: gruntRunFrames, frames: [0, 1], frameRate: 8 },
+                            attack: { spriteSheet: gruntAttackFrames, frames: [0], frameRate: 6 },
+                            stunned: { spriteSheet: gruntAttackFrames, frames: [1], frameRate: 1 }
+                        },
+                        heavy: {
+                            idle: { spriteSheet: heavyIdleFrames, frames: [0], frameRate: 4 },
+                            run: { spriteSheet: heavyRunFrames, frames: [0], frameRate: 6 },
+                            attack: { spriteSheet: heavyAttackFrames, frames: [0], frameRate: 8 },
+                            stunned: { spriteSheet: heavyAttackFrames, frames: [0], frameRate: 1 }
+                        },
+                        security: {
+                            idle: { spriteSheet: securityIdleFrames, frames: [0], frameRate: 4 },
+                            run: { spriteSheet: securityRunFrames, frames: [0], frameRate: 10 },
+                            attack: { spriteSheet: securityAttackFrames, frames: [0], frameRate: 12 },
+                            stunned: { spriteSheet: securityAttackFrames, frames: [0], frameRate: 1 }
+                        }
+                    };
+
+                    startOpeningCutscene();
+                    gameLoop(0);
+                })
+                .catch(error => {
+                    console.error("Error preloading images:", error);
+                    alert("Failed to load game assets. Please check the console for details.");
+                });
+        }
+        
+        function startOpeningCutscene() {
+            gameState = 'cutscene';
+            cutsceneTimer = setTimeout(skipCutscene, 11500);
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+            
+            cutsceneDiv.style.display = 'flex';
+            textDiv.style.display = 'none';
+            imageEl.style.display = 'block';
+
+            startScreenMusic.play().catch(e => console.error("Error playing start screen music in cutscene:", e));
+
+            let currentImageIndex = 0;
+
+            const showNextImage = () => {
+                if (gameState !== 'cutscene' || currentImageIndex >= cutsceneImages.length) {
+                    return;
+                }
+
+                if (currentImageIndex === 2) {
+                    imageEl.style.transition = 'opacity 1s ease-in-out';
+                } else {
+                    imageEl.style.transition = 'opacity 0.5s ease-in-out';
+                }
+                
+                imageEl.src = cutsceneImages[currentImageIndex].src;
+                imageEl.style.opacity = 1;
+
+                currentImageIndex++;
+
+                setTimeout(() => {
+                    if (gameState !== 'cutscene' || currentImageIndex > cutsceneImages.length) return;
+                    
+                    let fadeOutDuration = 500;
+                    if (currentImageIndex === 2) {
+                        fadeOutDuration = 1000;
+                        imageEl.style.transition = 'opacity 1s ease-in-out';
+                    } else {
+                        imageEl.style.transition = 'opacity 0.5s ease-in-out';
+                    }
+
+                    imageEl.style.opacity = 0;
+                    
+                    setTimeout(showNextImage, fadeOutDuration);
+                }, 3000);
+            };
+            
+            imageEl.style.opacity = 0;
+            showNextImage();
+        }
+        
+        function showLevel1StartScreen() {
+            gameState = 'cutscene';
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+
+            imageEl.src = gameAssets['images/who-am-i.png'].src;
+            imageEl.style.display = 'block';
+            imageEl.style.opacity = 1;
+
+            textDiv.innerHTML = 'LEVEL 1 START';
+            textDiv.style.display = 'block';
+            textDiv.style.color = '#fff';
+            textDiv.style.fontSize = '48px';
+            textDiv.style.textShadow = '2px 2px 8px #000';
+            textDiv.style.textAlign = 'center';
+
+            textDiv.style.top = 'auto';
+            textDiv.style.left = 'auto';
+            textDiv.style.bottom = 'auto';
+            textDiv.style.transform = 'none';
+
+            cutsceneDiv.style.display = 'flex';
+
+            setTimeout(() => {
+                cutsceneDiv.style.display = 'none';
+                textDiv.style.fontSize = '28px';
+                textDiv.style.textShadow = '2px 2px 4px #000';
+                imageEl.style.objectFit = 'contain';
+                textDiv.style.top = 'auto';
+                textDiv.style.left = '50%';
+                textDiv.style.bottom = '10%';
+                textDiv.style.transform = 'translateX(-50%)';
+                initLevel1();
+                gameState = 'playing';
+            }, 3000);
+        }
+
+        function skipCutscene() {
+            if (cutsceneTimer) clearTimeout(cutsceneTimer);
+            document.getElementById('cutscene').style.display = 'none';
+            document.getElementById('cutsceneImage').style.display = 'none';
+
+            const isStartingLevel1 = (currentLevel === 0);
+
+            if (isStartingLevel1) {
+                showLevel1StartScreen();
+            } else {
+                if (currentLevel === 1) initLevel2();
+                else if (currentLevel === 2) initLevel3();
+                else if (currentLevel === 3) initLevel4();
+                else if (currentLevel === 4) initLevel5();
+                else if (currentLevel === 5) initLevel6();
+                else {
+                     gameState = 'title';
+                     document.getElementById('titleScreen').style.display = 'flex';
+                }
+            }
+            
+            if (!isStartingLevel1 && (gameState === 'cutscene' || gameState === 'ending')) {
+                gameState = 'playing';
+            }
+        }
+        
+        
+        function initLevel1() {
+            currentLevel = 1; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ new Enemy(960, currentGroundLevel), new Enemy(1200, currentGroundLevel), new Enemy(1440, currentGroundLevel, 'security') ];
+            levelBoss = null; environmentObjects = []; projectiles = []; npc = null; updateUI();
+            playLevel1Music();
+        }
+
+        function initLevel2() {
+            currentLevel = 2; player.x = canvas.width / 2; player.health = 100; player.energy = 0;
+            currentGroundLevel = 360;
+            enemies = []; levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [];
+            enemiesToSpawnInLevel2 = 10;
+            level2EnemySpawnTimer = 2000;
+            updateUI();
+            playLevel2Music();
+        }
+
+        function initLevel3() {
+            currentLevel = 3; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ new Enemy(1200, currentGroundLevel, 'heavy'), new Enemy(1440, currentGroundLevel, 'security') ];
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [ 
+                new EnvironmentObject(480, currentGroundLevel, 'chair'), new EnvironmentObject(960, currentGroundLevel, 'lamp'),
+                new EnvironmentObject(720, 0, 'destructible_wall')
+            ];
+            environmentObjects[2].width = 480; environmentObjects[2].height = 360;
+            updateUI();
+        }
+
+        function initLevel4() {
+            currentLevel = 4; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ new Enemy(1440, currentGroundLevel, 'heavy'), new Enemy(1680, currentGroundLevel, 'security') ];
+            levelBoss = null; projectiles = []; npc = new NPC(120, currentGroundLevel);
+            environmentObjects = [ new EnvironmentObject(720, currentGroundLevel, 'chair') ];
+            updateUI();
+        }
+
+        function initLevel5() {
+            currentLevel = 5; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ new Enemy(960, currentGroundLevel, 'security'), new Enemy(1200, currentGroundLevel, 'security') ];
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [ new EnvironmentObject(600, currentGroundLevel, 'monitor'), new EnvironmentObject(1320, currentGroundLevel, 'monitor')];
+            updateUI();
+        }
+        
+        function initLevel6() {
+            currentLevel = 6; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ new Enemy(960, currentGroundLevel, 'heavy') ];
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [ new EnvironmentObject(720, 0, 'laser'), new EnvironmentObject(1440, 0, 'laser') ];
+            environmentObjects[0].width = 24; environmentObjects[1].width = 24;
+            updateUI();
+        }
+
+
+        function checkLevelCompletion() {
+            if(currentLevel === 2 && enemiesToSpawnInLevel2 <= 0 && enemies.length === 0 && !levelBoss) {
+                 levelBoss = new PoliceBoss(1680, currentGroundLevel);
+            }
+            else if (enemies.length === 0 && !levelBoss) {
+                if (currentLevel === 1) levelBoss = new Boss(1680, currentGroundLevel);
+                else if (currentLevel === 3) levelBoss = new AssassinBoss(1680, currentGroundLevel);
+                else if (currentLevel === 4) levelBoss = new ExecutiveBoss(1680, currentGroundLevel);
+                else if (currentLevel === 5) levelBoss = new HandlerBoss(1680, currentGroundLevel);
+                else if (currentLevel === 6) showLevelCompleteCutscene();
+            }
+            if (levelBoss && levelBoss.health <= 0) {
+                levelBoss = null;
+                showLevelCompleteCutscene();
+            }
+        }
+        
+        function showLevelCompleteCutscene() {
+            gameState = 'cutscene';
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+
+            textDiv.style.display = 'block';
+            textDiv.style.top = 'auto';
+            textDiv.style.left = 'auto';
+            textDiv.style.transform = 'none';
+            textDiv.style.color = '#ffffff';
+            textDiv.style.backgroundColor = 'transparent';
+            textDiv.style.opacity = '1';
+
+
+            let cutsceneText = '';
+            let cutsceneImage = '';
+
+            const levelCutsceneImages = [
+                'cutscenes/level_1_cutscene_1-memory-fragments.png',
+                'cutscenes/level_2_cutscene_rooftop-realization.png',
+                'cutscenes/level_3_cutscene_identity_crisis.png',
+                'cutscenes/level_4_cutscene_painful-memories.png',
+                'cutscenes/level_5_cutscene_dark-past-revealed.png',
+                'cutscenes/ending_cutscene.png'
+            ];
+            
+            if (currentLevel >= 1 && currentLevel <= 6) {
+                cutsceneImage = levelCutsceneImages[currentLevel - 1];
+            }
+
+            if (currentLevel === 1) {
+                cutsceneText = '"I remember... but this isn\'t right..."';
+            } else if (currentLevel === 2) {
+                cutsceneText = '"These moves... I never learned them in medical school."';
+            } else if (currentLevel === 3) {
+                cutsceneText = '"Dr. Jack Morrison... was that ever really my name?"';
+            } else if (currentLevel === 4) {
+                cutsceneText = '"They made me forget... but why?"';
+            } else if (currentLevel === 5) {
+                cutsceneText = '"I chose to forget the monster I became..."';
+            } else if (currentLevel === 6) {
+                cutsceneText = '"...but some things can\'t stay buried."';
+            }
+            
+            textDiv.innerHTML = cutsceneText;
+
+            if (cutsceneImage) {
+                imageEl.src = gameAssets[cutsceneImage].src;
+                imageEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'none';
+            }
+            
+            cutsceneDiv.style.display = 'flex';
+
+            cutsceneTimer = setTimeout(skipCutscene, 5000);
+        }
+        
+        function handleInput() {
+            if (gameState !== 'playing') return;
+            player.vx = 0;
+            if (player.state !== 'attacking' && player.state !== 'special') {
+                if (keys['arrowleft']) { 
+                    player.vx = -1; 
+                    player.facing = -1; 
+                    player.state = 'walking'; 
+                    player.currentAnimation = 'running';
+                }
+                else if (keys['arrowright']) { 
+                    player.vx = 1; 
+                    player.facing = 1; 
+                    player.state = 'walking'; 
+                    player.currentAnimation = 'running';
+                }
+                else { 
+                    player.vx = 0; 
+                    if(player.grounded) {
+                        player.state = 'idle';
+                        player.currentAnimation = 'idle';
+                    }
+                }
+
+                if (keys['arrowup'] && player.grounded) { 
+                    player.vy = JUMP_VELOCITY; 
+                    player.grounded = false; 
+                    player.currentAnimation = 'jumping';
+                }
+            }
+            if (keys['a'] && player.attackCooldown <= 0) {
+                if (keys['s'] && player.energy >= player.maxEnergy) performSpecialMove();
+                else performLightAttack();
+            } else if (keys['s'] && player.attackCooldown <= 0) {
+                performHeavyAttack();
+            }
+            if (keys['e']) {
+                keys['e'] = false;
+                performInteraction();
+            }
+        }
+        
+        function performInteraction() {
+            for (let i = environmentObjects.length - 1; i >= 0; i--) {
+                const obj = environmentObjects[i];
+                if (obj.type !== 'destructible_wall' && obj.type !== 'laser' && Math.abs(player.x - obj.x) < 40) {
+                    projectiles.push(new Projectile(player.x, player.y - 40, 360 * player.facing, -300, obj.type));
+                    environmentObjects.splice(i, 1);
+                    return; 
+                }
+            }
+        }
+
+        function performLightAttack() {
+            player.state = 'attacking'; 
+            player.attackCooldown = 333; 
+            player.lastAttackType = 'light';
+            player.currentAnimation = 'punch';
+            player.currentFrame = 0;
+            player.frameTimer = 0;
+            player.attackCombo = (player.attackCombo % 5) + 1;
+            let damage = player.attackCombo === 4 ? 8 : (player.attackCombo === 5 ? 10 : 5);
+            const attackHitbox = { x: player.x + (player.facing * 40), width: 70 };
+            
+            [...enemies, levelBoss].filter(e => e).forEach((enemy, index) => {
+                if (Math.abs(enemy.x - attackHitbox.x) < attackHitbox.width / 2) {
+                    if (enemy.takeDamage(damage) && enemy !== levelBoss) enemies.splice(index, 1);
+                    player.energy = Math.min(player.maxEnergy, player.energy + 2);
+                    createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 5);
+                    createParticles(enemy.x, enemy.y - enemy.height/2, 'spark', 3);
+                }
+            });
+            updateUI();
+        }
+        
+        function performHeavyAttack() {
+            player.state = 'attacking'; 
+            player.attackCooldown = 666; 
+            player.attackCombo = 0; 
+            player.lastAttackType = 'heavy';
+            player.currentAnimation = 'kick';
+            player.currentFrame = 0;
+            player.frameTimer = 0;
+            const damage = 15;
+            const attackHitbox = { x: player.x + (player.facing * 50), width: 90 };
+            [...enemies, levelBoss].filter(e => e).forEach((enemy, index) => {
+                 if (Math.abs(enemy.x - attackHitbox.x) < attackHitbox.width/2) {
+                    if (enemy.takeDamage(damage) && enemy !== levelBoss) enemies.splice(index, 1);
+                    player.energy = Math.min(player.maxEnergy, player.energy + 4);
+                    createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 8);
+                    createParticles(enemy.x, enemy.y - enemy.height/2, 'spark', 5);
+                }
+            });
+            environmentObjects.forEach((wall, index) => {
+                if (wall.type === 'destructible_wall' && attackHitbox.x > wall.x && attackHitbox.x < wall.x + wall.width) {
+                    if(--wall.health <= 0) environmentObjects.splice(index, 1);
+                }
+            });
+            updateUI();
+        }
+        
+        function performSpecialMove() {
+            player.state = 'special'; player.attackCooldown = 3000; player.energy = 0; player.invulnerable = 3000;
+            createParticles(player.x, player.y - player.height/2, 'special', 30);
+            
+            let primaryTarget = null; let closestDist = 150;
+            [...enemies, levelBoss].filter(e => e).forEach(enemy => {
+                const dist = enemy.x - player.x;
+                if ((player.facing > 0 ? dist > 0 : dist < 0) && Math.abs(dist) < closestDist) {
+                    closestDist = Math.abs(dist); primaryTarget = enemy;
+                }
+            });
+            if (primaryTarget) {
+                 if (primaryTarget.takeDamage(88) && primaryTarget !== levelBoss) {
+                    enemies.splice(enemies.indexOf(primaryTarget), 1);
+                 }
+            }
+            [...enemies, levelBoss].filter(e => e && e !== primaryTarget && Math.abs(e.x - player.x) < 150).forEach(e => {
+                if (e.takeDamage(15) && e !== levelBoss) enemies.splice(enemies.indexOf(e), 1);
+            });
+            const specialHitbox = {x: player.x, width: 300};
+            environmentObjects.forEach((wall, index) => {
+                if (wall.type === 'destructible_wall' && specialHitbox.x + specialHitbox.width/2 > wall.x && specialHitbox.x - specialHitbox.width/2 < wall.x + wall.width) {
+                    if(--wall.health <= 0) environmentObjects.splice(index, 1);
+                }
+            });
+            updateUI();
+        }
+        
+        function updatePlayer(deltaTime) {
+            if (player.y < currentGroundLevel && player.grounded) {
+                player.grounded = false;
+                player.vy = 0;
+            }
+
+            player.x += player.vx * PLAYER_SPEED * deltaTime;
+            if (!player.grounded) {
+                player.vy += GRAVITY * deltaTime;
+                player.y += player.vy * deltaTime;
+                if (player.y >= currentGroundLevel) {
+                    player.y = currentGroundLevel;
+                    player.vy = 0;
+                    player.grounded = true;
+                    if (player.currentAnimation === 'jumping') {
+                        if (player.vx !== 0) {
+                            player.currentAnimation = 'running';
+                        } else {
+                            player.currentAnimation = 'idle';
+                        }
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                    }
+                }
+            }
+            player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, player.x));
+            if (player.attackCooldown > 0) {
+                player.attackCooldown -= deltaTime * 1000;
+                if(player.attackCooldown <= 0) {
+                     player.state = 'idle'; 
+                     player.attackCombo = 0;
+                     if (player.vx !== 0) {
+                         player.currentAnimation = 'running';
+                     } else {
+                         player.currentAnimation = 'idle';
+                     }
+                     player.currentFrame = 0;
+                     player.frameTimer = 0;
+                }
+            }
+            if (player.invulnerable > 0) player.invulnerable -= deltaTime * 1000;
+
+            player.frameTimer += deltaTime;
+            const animation = playerAnimations[player.currentAnimation];
+            if (player.frameTimer >= 1 / animation.frameRate) {
+                player.currentFrame = (player.currentFrame + 1) % animation.frames.length;
+                player.frameTimer = 0;
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('healthBar').style.width = `${player.health / player.maxHealth * 100}%`;
+            const energyBar = document.getElementById('energyBar');
+            energyBar.style.width = `${player.energy / player.maxEnergy * 100}%`;
+            energyBar.classList.toggle('pulse', player.energy >= player.maxEnergy);
+        }
+        
+        function drawPlayer() {
+            ctx.save();
+            if (player.invulnerable > 0 && Math.floor(Date.now() / 100) % 2) {
+                ctx.globalAlpha = 0.5;
+            }
+
+            const animation = playerAnimations[player.currentAnimation];
+            const currentSprite = animation.spriteSheet[player.currentFrame];
+            if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                if (player.facing === -1) {
+                    ctx.translate(player.x + player.width / 2, player.y);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(currentSprite,
+                                  -player.width / 2, -player.height, player.width, player.height);
+                } else {
+                    ctx.drawImage(currentSprite,
+                                  player.x - player.width / 2, player.y - player.height, player.width, player.height);
+                }
+            } else {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(player.x - player.width / 2, player.y - player.height, player.width, player.height);
+            }
+            
+            if (player.state === 'attacking') {
+                if (player.lastAttackType === 'light') {
+                    ctx.fillStyle = player.attackCombo === 5 ? '#00FFFF' : '#ADD8E6';
+                    ctx.fillRect(player.x + (player.facing * 25), player.y - 45, 40, 20);
+                } else if (player.lastAttackType === 'heavy') {
+                    ctx.fillStyle = '#FFA500';
+                    ctx.fillRect(player.x + (player.facing * 30), player.y - 50, 60, 30);
+                }
+            } else if (player.state === 'special') {
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.beginPath();
+                ctx.arc(player.x, player.y - player.height / 2, 60, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        
+        function drawLevel1Background() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (level1BackgroundImage.complete && level1BackgroundImage.naturalWidth > 0) {
+                const bgWidth = level1BackgroundImage.naturalWidth;
+                const bgHeight = level1BackgroundImage.naturalHeight;
+
+                const scale = canvas.height / bgHeight;
+                const scaledWidth = bgWidth * scale;
+                const scaledHeight = canvas.height;
+
+                ctx.drawImage(level1BackgroundImage, 
+                    0, 0, 
+                    scaledWidth, scaledHeight
+                );
+            }
+        }
+
+        function drawLevel2Background() {
+            if (level2TruckBackgroundImage.complete && level2TruckBackgroundImage.naturalWidth > 0) {
+                const scale = 1.2;
+                const scaledWidth = canvas.width * scale;
+                const scaledHeight = canvas.height * scale;
+                const dx = (canvas.width - scaledWidth) / 2;
+                const dy = (canvas.height - scaledHeight) / 2;
+                ctx.drawImage(level2TruckBackgroundImage, dx, dy, scaledWidth, scaledHeight);
+            } else {
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#666';
+                ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+            }
+
+            backgroundElements.forEach(el => el.draw());
+        }
+
+        function drawLevel3Background() {
+            if (level3JungleBackgroundImage.complete && level3JungleBackgroundImage.naturalWidth > 0) {
+                ctx.drawImage(level3JungleBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#8B4513'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+            }
+        }
+        
+        function drawLevel4Background() {
+            if (level4SunsetBackgroundImage.complete && level4SunsetBackgroundImage.naturalWidth > 0) {
+                ctx.drawImage(level4SunsetBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#5D6D7E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#EAECEE'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height-currentGroundLevel);
+            }
+        }
+
+        function drawLevel5Background() {
+            if (level5LabBackgroundImage.complete && level5LabBackgroundImage.naturalWidth > 0) {
+                ctx.drawImage(level5LabBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#34495e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#7f8c8d'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+            }
+        }
+
+        function drawLevel6Background() {
+            ctx.fillStyle = '#1C1C1C'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            for(let i=0; i<20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random()*canvas.width, 0);
+                ctx.lineTo(Math.random()*canvas.width, canvas.height);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#333'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+        }
+
+        function drawBeachBackground() {
+            ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.arc(240, 180, 72, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#00BFFF'; ctx.fillRect(0, 450, canvas.width, canvas.height - 450);
+            ctx.fillStyle = '#F0E68C'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+        }
+
+        function drawEndingScene() {
+            cutsceneTimer -= 1000/60;
+            drawBeachBackground();
+
+            player.x = canvas.width / 2;
+            player.y = currentGroundLevel;
+            
+            ctx.fillStyle = '#4444ff';
+            ctx.fillRect(player.x - player.width/2, player.y - player.height, player.width, player.height);
+            
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x - 15, player.y - 55, 30, 10);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = '36px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText("Finally... free.", canvas.width / 2, 150);
+
+            if (cutsceneTimer <= 0) {
+                gameState = 'title';
+                document.getElementById('titleScreen').style.display = 'flex';
+                currentLevel = 0; 
+            }
+        }
+
+
+        function gameLoop(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            if (gameState === 'title') {
+                 // Waiting for user to click "Start Game"
+            } else if (gameState === 'cutscene' && currentLevel === 0) {
+                // Opening cutscene handled by setTimeout
+            } else if (gameState === 'ending') {
+                drawEndingScene();
+            } else if (gameState === 'playing') {
+                handleInput();
+                updatePlayer(deltaTime);
+                if (npc) npc.update(deltaTime);
+
+                if (currentLevel === 2) {
+                    backgroundElements.forEach(el => el.update(deltaTime, player.vx));
+                    level2EnemySpawnTimer -= deltaTime * 1000;
+                    if(level2EnemySpawnTimer <= 0 && enemiesToSpawnInLevel2 > 0) {
+                        enemies.push(new Enemy(Math.random() * (canvas.width - 200) + 100, -50));
+                        enemiesToSpawnInLevel2--;
+                        level2EnemySpawnTimer = 3000 + Math.random() * 2000;
+                    }
+                }
+
+
+                projectiles.forEach((p, pIndex) => {
+                    p.update(deltaTime);
+                    let hit = false;
+                    if (p.type === 'knife' && Math.abs(p.x - player.x) < 20 && Math.abs(p.y - (player.y - player.height/2)) < player.height/2) {
+                        player.health = Math.max(0, player.health - 10);
+                        player.invulnerable = 500; updateUI(); hit = true;
+                        createParticles(player.x, player.y - player.height/2, 'hit', 8);
+                    } else {
+                         [...enemies, levelBoss].filter(e => e).forEach((enemy, eIndex) => {
+                            if (Math.abs(p.x - enemy.x) < (p.width + enemy.width) / 2) {
+                                if (enemy.takeDamage(10) && enemy !== levelBoss) enemies.splice(eIndex, 1);
+                                hit = true;
+                            }
+                        });
+                    }
+                    if (hit || p.x < 0 || p.x > canvas.width || p.y > currentGroundLevel) projectiles.splice(pIndex, 1);
+                });
+                
+                environmentObjects.forEach(obj => {
+                    if(obj.type === 'laser' && obj.active && Math.abs(player.x - (obj.x + obj.width/2)) < player.width/2) {
+                        player.health = 0; updateUI();
+                        createParticles(player.x, player.y - player.height/2, 'explosion', 30);
+                    }
+                });
+
+                enemies.forEach(e => e.update(deltaTime));
+                if (levelBoss) levelBoss.update(deltaTime);
+                
+                updateParticles(deltaTime);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (currentLevel === 1) drawLevel1Background();
+                else if (currentLevel === 2) drawLevel2Background();
+                else if (currentLevel === 3) drawLevel3Background();
+                else if (currentLevel === 4) drawLevel4Background();
+                else if (currentLevel === 5) drawLevel5Background();
+                else if (currentLevel === 6) drawLevel6Background();
+                
+                projectiles.forEach(p => p.draw());
+                environmentObjects.forEach(obj => obj.draw());
+                if(npc) npc.draw();
+                enemies.forEach(e => e.draw());
+                if (levelBoss) levelBoss.draw();
+                drawPlayer();
+                drawParticles();
+                
+                checkLevelCompletion();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const titleScreen = document.getElementById('titleScreen');
+            if (titleScreen) {
+                titleScreen.addEventListener('click', startGame);
+            }
+            setupMobileControls();
+        });
+    </script>
+</body>
+</html>

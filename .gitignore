@@ -1,0 +1,55 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Backup files
+*.backup.html
+*.backup_final.html
+*.final.html
+index26*.html
+*_backup*.html
+Untitled.html
+
+# Large media files in root (keep directories)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.prproj
+
+# Large loose images in root (directories are fine)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Adobe Premiere auto-save
+adobe premiere pro auto-save/
+
+# Node modules (if any)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Build outputs
+dist/
+build/

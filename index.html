@@ -1,0 +1,2827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReBOURNE: Jack Unleashed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 1920px;
+            height: 720px;
+        }
+
+        #gameCanvas {
+            display: block;
+            border: 2px solid #333;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+        }
+        
+        .health-bar, .energy-bar {
+            width: 200px;
+            height: 20px;
+            border: 2px solid #fff;
+            margin: 5px 0;
+            position: relative;
+            background: #333;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4444ff, #6666ff);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .energy-fill.pulse {
+            animation: energyPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes energyPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .cutscene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            justify-content: center; /* Center vertically */
+            align-items: center;   /* Center horizontally */
+            z-index: 200;
+        }
+        
+        #cutsceneImage {
+            width: 100%;
+            height: auto;
+            max-height: 70%;
+            object-fit: contain;
+            display: none; /* Hidden by default */
+        }
+
+        .cutscene-text {
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            text-shadow: 2px 2px 4px #000;
+            width: 80%;
+            border-radius: 10px;
+            /* Properties below are for text-only cutscenes & can be overridden */
+            opacity: 1;
+            animation: none;
+            background-color: transparent;
+        }
+        
+        .cutscene-skip {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        @keyframes flashRed {
+            0%, 100% { background: #000; }
+            50% { background: #440000; }
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000; /* Keep black background */
+            cursor: pointer;
+            z-index: 300;
+            display: flex; /* New */
+            justify-content: center; /* New */
+            align-items: center; /* New */
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+            animation: titleGlow 2s infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: #ff4444;
+            text-shadow: 0 0 10px #ff4444;
+            margin-bottom: 40px;
+        }
+        
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .start-btn:hover {
+            background: #ff6666;
+            transform: scale(1.05);
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 20px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+        }
+        #fullscreenBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #888;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        #fullscreenBtn:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #mobileControls {
+            /* DEBUG: Forcing this to be visible */
+            display: flex !important;
+            background-color: rgba(255, 0, 0, 0.5) !important; 
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            z-index: 150;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Hide controls only on devices with a mouse/fine pointer - TEMPORARILY DISABLED FOR DEBUGGING
+        @media (pointer: fine) {
+            #mobileControls {
+                display: none;
+            }
+        }
+        */
+
+        .d-pad, .action-buttons {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #mobileControls button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background-color: rgba(80, 80, 80, 0.5);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        #mobileControls button:active {
+            background-color: rgba(120, 120, 120, 0.7);
+        }
+    </style>
+    <link rel="icon" href="data:,">
+  </head><body>
+    <div id="gameContainer">
+        <div class="title-screen" id="titleScreen">
+            <img id="startScreenImage" src="images/start_screen_background.gif" alt="Start Screen" style="max-width: 80%; max-height: 80%; object-fit: contain;">
+        </div>
+        
+        <canvas id="gameCanvas" width="1920" height="720"></canvas>
+        <button id="fullscreenBtn" title="Toggle Fullscreen">📺</button>
+        
+        <div class="game-ui">
+            <div>Dr. Jack</div>
+            <div class="health-bar">
+                <div class="health-fill" id="healthBar" style="width: 100%;"></div>
+            </div>
+            <div>Energy</div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energyBar" style="width: 0%;"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            Z-Light | X-Heavy | E-Interact | Arrows-Move | Z+X (Full Energy)-Special
+        </div>
+        
+        <div class="cutscene" id="cutscene">
+             <img id="cutsceneImage" src="">
+            <div class="cutscene-text" id="cutsceneText"></div>
+            <div class="cutscene-skip">Press SPACE to skip</div>
+        </div>
+
+        <div id="mobileControls">
+            <div class="d-pad">
+                <button id="mc-left">◀</button>
+                <button id="mc-right">▶</button>
+            </div>
+            <div class="action-buttons">
+                <button id="mc-jump">⬆️</button>
+                <button id="mc-punch">A</button>
+                <button id="mc-kick">S</button>
+            </div>
+        </div>
+        <video id="highwayVideo" src="level_2_truck_bg_.mp4" loop muted style="display:none"></video>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const gameContainer = document.getElementById('gameContainer');
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                gameContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        function preloadImages(imagePaths) {
+            const promises = [];
+            const loadedImages = {};
+
+            imagePaths.forEach(path => {
+                const img = new Image();
+                loadedImages[path] = img; // Store the image object
+                const promise = new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => {
+                        console.error(`CRITICAL IMAGE LOAD ERROR: Failed to load image: ${path}`);
+                        reject(new Error(`Failed to load image: ${path}`));
+                    };
+                });
+                img.src = path;
+                promises.push(promise);
+            });
+
+            return Promise.all(promises).then(() => loadedImages);
+        }
+
+        let level1BackgroundImage;
+        let level2RooftopBackgroundImage;
+        let level3JungleBackgroundImage;
+        let level4SunsetBackgroundImage;
+        let level5TruckBackgroundImage;
+
+        let level5RoadOffset = 0;
+        let level5CityOffset = 0;
+
+        function getEntityScale(y) {
+            const minRoadY = 500;
+            const maxRoadY = 700;
+            const t = Math.max(0, Math.min(1, (y - minRoadY) / (maxRoadY - minRoadY)));
+            return 0.4 + 0.6 * t;
+        }
+
+        // Margery Animation Frames
+        let margeryIdleLeftFrames = [];
+        let margeryIdleRightFrames = [];
+        let margeryJumpLeftFrames = [];
+        let margeryJumpRightFrames = [];
+        let margeryRunLeftFrames = [];
+        let margeryRunRightFrames = [];
+
+        let cutsceneImages = [];
+
+        const margeryAnimations = {
+            idleLeft: { spriteSheet: margeryIdleLeftFrames, frames: [0, 1], frameRate: 4 },
+            idleRight: { spriteSheet: margeryIdleRightFrames, frames: [0, 1], frameRate: 4 },
+            jumpLeft: { spriteSheet: margeryJumpLeftFrames, frames: [0], frameRate: 1 },
+            jumpRight: { spriteSheet: margeryJumpRightFrames, frames: [0], frameRate: 1 },
+            runLeft: { spriteSheet: margeryRunLeftFrames, frames: [0, 1, 2, 3, 4, 5], frameRate: 10 },
+            runRight: { spriteSheet: margeryRunRightFrames, frames: [0, 1, 2, 3, 4, 5], frameRate: 10 }
+        };
+
+        const allImagePaths = [
+            'images/level_1_background.gif',
+            'images/start_screen_background.gif',
+            'images/level_2_truck.png',
+            'images/level_3_jungle.png',
+            'images/level_4_sunset.png',
+            'images/level_5_lab.png',
+            'images/google_ai_studio_2025-09-01t15_32_37.197z.png',
+            'images/cutscene1.png',
+            'images/cutscene2.png',
+            'images/cutscene3.png',
+            'images/who-am-i.png',
+            'cutscenes/level_1_cutscene_1-memory-fragments.png',
+            'cutscenes/level_2_cutscene_rooftop-realization.png',
+            'cutscenes/level_3_cutscene_identity_crisis.png',
+            'cutscenes/level_4_cutscene_painful-memories.png',
+            'cutscenes/level_5_cutscene_dark-past-revealed.png',
+            'cutscenes/ending_cutscene.png',
+            // New Jack Rebourne Sprites
+            'jack_rebourne_sprites/run/frame_000.png', 'jack_rebourne_sprites/run/frame_001.png', 'jack_rebourne_sprites/run/frame_002.png', 'jack_rebourne_sprites/run/frame_003.png', 'jack_rebourne_sprites/run/frame_004.png',
+            'jack_rebourne_sprites/run/frame_005.png', 'jack_rebourne_sprites/run/frame_006.png', 'jack_rebourne_sprites/run/frame_007.png', 'jack_rebourne_sprites/run/frame_008.png', 'jack_rebourne_sprites/run/frame_009.png',
+            'jack_rebourne_sprites/attack_combo/1.jab/frame_001.png', 'jack_rebourne_sprites/attack_combo/1.jab/frame_002.png', 'jack_rebourne_sprites/attack_combo/1.jab/frame_003.png', 'jack_rebourne_sprites/attack_combo/1.jab/frame_004.png',
+            'jack_rebourne_sprites/attack_combo/2.right_punch/frame_001.png', 'jack_rebourne_sprites/attack_combo/2.right_punch/frame_002.png',
+            'jack_rebourne_sprites/attack_combo/3.right_kick/frame_001.png', 'jack_rebourne_sprites/attack_combo/3.right_kick/frame_002.png', 'jack_rebourne_sprites/attack_combo/3.right_kick/frame_003.png',
+            'jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_01.png', 'jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_02.png', 'jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_03.png',
+            'jack_rebourne_sprites/attack_combo/5.left_kick/frame_001.png', 'jack_rebourne_sprites/attack_combo/5.left_kick/frame_002.png',
+            'jack_rebourne_sprites/jump/1.jump_up/frame_0.png', 'jack_rebourne_sprites/jump/1.jump_up/frame_01png.png',
+            'jack_rebourne_sprites/jump/2.air/frame_02_air.png', 'jack_rebourne_sprites/jump/2.air/frame_03_air.png', 'jack_rebourne_sprites/jump/2.air/frame_04_air.png',
+            'jack_rebourne_sprites/jump/3.land/frame_05_land.png', 'jack_rebourne_sprites/jump/3.land/frame_06_land.png',
+            'jack_rebourne_sprites/jump_attack/hit1/frame_000.png', 'jack_rebourne_sprites/jump_attack/hit1/frame_001.png',
+            'jack_rebourne_sprites/jump_attack/hit2/frame_002.png', 'jack_rebourne_sprites/jump_attack/hit2/frame_003.png',
+            'jack_rebourne_sprites/bike/frame_000.png', 'jack_rebourne_sprites/bike/frame_001.png', 'jack_rebourne_sprites/bike/frame_002.png', 'jack_rebourne_sprites/bike/frame_003.png', 'jack_rebourne_sprites/bike/frame_004.png',
+            'jack_rebourne_sprites/bike/frame_005.png', 'jack_rebourne_sprites/bike/frame_006.png', 'jack_rebourne_sprites/bike/frame_007.png', 'jack_rebourne_sprites/bike/frame_008.png', 'jack_rebourne_sprites/bike/frame_009.png',
+            'jack_rebourne_sprites/bike/frame_010.png', 'jack_rebourne_sprites/bike/frame_011.png', 'jack_rebourne_sprites/bike/frame_012.png', 'jack_rebourne_sprites/bike/frame_013.png', 'jack_rebourne_sprites/bike/frame_014.png',
+            'jack_rebourne_sprites/bike_shoot/shot1/frame_001.png', 'jack_rebourne_sprites/bike_shoot/shot1/frame_002.png', 'jack_rebourne_sprites/bike_shoot/shot1/frame_003.png',
+            'jack_rebourne_sprites/bike_shoot/shot2/frame_004.png', 'jack_rebourne_sprites/bike_shoot/shot2/frame_005.png', 'jack_rebourne_sprites/bike_shoot/shot2/frame_006.png',
+            'jack_rebourne_sprites/bike_shoot/shot3/frame_007.png', 'jack_rebourne_sprites/bike_shoot/shot3/frame_008.png', 'jack_rebourne_sprites/bike_shoot/shot3/frame_009.png', 'jack_rebourne_sprites/bike_shoot/shot3/frame_010.png',
+            'jack_rebourne_sprites/bike_shoot/shot4/frame_011.png', 'jack_rebourne_sprites/bike_shoot/shot4/frame_012.png', 'jack_rebourne_sprites/bike_shoot/shot4/frame_013.png', 'jack_rebourne_sprites/bike_shoot/shot4/frame_014.png',
+            'jack_rebourne_sprites/hurt/frame_001.png', 'jack_rebourne_sprites/hurt/frame_002.png', 'jack_rebourne_sprites/hurt/frame_003.png', 'jack_rebourne_sprites/hurt/frame_004.png', 'jack_rebourne_sprites/hurt/frame_005.png',
+            'jack_rebourne_sprites/hurt/frame_006_fall.png', 'jack_rebourne_sprites/hurt/frame_010_death.png',
+             'jack_rebourne_sprites/idle_jack.png',
+            // Enemy Sprites
+            'new_enemies/grunt/grunt_walk/frame_000.png', 'new_enemies/grunt/grunt_walk/frame_001.png', 'new_enemies/grunt/grunt_walk/frame_002.png', 'new_enemies/grunt/grunt_walk/frame_003.png',
+            'new_enemies/grunt/grunt_walk/frame_004.png', 'new_enemies/grunt/grunt_walk/frame_005.png', 'new_enemies/grunt/grunt_walk/frame_006.png',
+            'new_enemies/grunt/grunt_attack/punch/frame_000.png', 'new_enemies/grunt/grunt_attack/punch/frame_001.png', 'new_enemies/grunt/grunt_attack/punch/frame_002.png',
+            'new_enemies/grunt/grunt_attack/kick/frame_000.png', 'new_enemies/grunt/grunt_attack/kick/frame_003.png', 'new_enemies/grunt/grunt_attack/kick/frame_004.png',
+            'new_enemies/security/walk/frame_000.png', 'new_enemies/security/walk/frame_001.png', 'new_enemies/security/walk/frame_002.png', 'new_enemies/security/walk/frame_003.png', 'new_enemies/security/walk/frame_004.png',
+            'new_enemies/security/attack_punch/frame_000.png', 'new_enemies/security/attack_punch/frame_007.png', 'new_enemies/security/attack_punch/frame_008.png',
+            'new_enemies/security/attack_bat/frame_005.png', 'new_enemies/security/attack_bat/frame_006.png',
+            // Margery Assets
+            'images/margery_limited (1)/margery_idle left_0.png', 'images/margery_limited (1)/margery_idle left_1.png',
+            'images/margery_limited (1)/margery_idle right_0.png', 'images/margery_limited (1)/margery_idle right_1.png',
+            'images/margery_limited (1)/margery_jump left_0.png', 'images/margery_limited (1)/margery_jump right_0.png',
+            'images/margery_limited (1)/margery_run left_0.png', 'images/margery_limited (1)/margery_run left_1.png', 'images/margery_limited (1)/margery_run left_2.png', 'images/margery_limited (1)/margery_run left_3.png', 'images/margery_limited (1)/margery_run left_4.png', 'images/margery_limited (1)/margery_run left_5.png',
+            'images/margery_limited (1)/margery_run right_0.png', 'images/margery_limited (1)/margery_run right_1.png', 'images/margery_limited (1)/margery_run right_2.png', 'images/margery_limited (1)/margery_run right_3.png', 'images/margery_limited (1)/margery_run right_4.png', 'images/margery_limited (1)/margery_run right_5.png'
+        ];
+        
+        let currentLevel = 0;
+        const startScreenMusic = new Audio('Music/Pixelated Groove Machine.mp3');
+        startScreenMusic.loop = true;
+        startScreenMusic.volume = 0.5; // Adjust volume as needed
+
+        const level1Music = new Audio('Music/Neon Strut.mp3');
+        level1Music.loop = true;
+        level1Music.volume = 0.5; // Adjust volume as needed
+
+        const level2Music = new Audio('Music/cyberpunk-street.mp3');
+        level2Music.loop = true;
+        level2Music.volume = 0.5; // Adjust volume as needed
+
+        // Function to play start screen music
+        function playStartScreenMusic() {
+            startScreenMusic.play().catch(e => console.error("Error playing start screen music:", e));
+        }
+
+        // Function to play level 1 music
+        function playLevel1Music() {
+            startScreenMusic.pause();
+            startScreenMusic.currentTime = 0; // Reset start screen music
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        // Function to play level 2 music
+        function playLevel2Music() {
+            level1Music.pause();
+            level1Music.currentTime = 0; // Reset level 1 music
+            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+        }
+
+        function stopAllMusic() {
+            [startScreenMusic, level1Music, level2Music].forEach(m => {
+                m.pause();
+                m.currentTime = 0;
+            });
+        }
+
+        let playerAnimations; // This will be defined after assets are loaded.
+
+        // Jack Rebourne Frame Arrays
+        let drJackIdleFrames = [];
+        let drJackRunFrames = [];
+        let drJackJumpUpFrames = [];
+        let drJackJumpAirFrames = [];
+        let drJackJumpLandFrames = [];
+        let drJackJabFrames = [];
+        let drJackPunchFrames = [];
+        let drJackRightKickFrames = [];
+        let drJackUppercutFrames = [];
+        let drJackLeftKickFrames = [];
+        let drJackJumpAttack1Frames = [];
+        let drJackJumpAttack2Frames = [];
+        let drJackBikeFrames = [];
+        let drJackBikeShoot1Frames = [];
+        let drJackBikeShoot2Frames = [];
+        let drJackBikeShoot3Frames = [];
+        let drJackBikeShoot4Frames = [];
+        let drJackHurtFrames = [];
+        let drJackDeathFrames = [];
+
+        // Enemy Frame Arrays
+        let gruntWalkFrames = [];
+        let gruntPunchFrames = [];
+        let gruntKickFrames = [];
+        let securityWalkFrames = [];
+        let securityPunchFrames = [];
+        let securityBatFrames = [];
+
+        let gameState = 'title';
+        
+        let cutsceneTimer = 0;
+        let level2EnemySpawnTimer = 0;
+                    let level5ObstacleSpawnTimer = 0;
+        let enemiesToSpawnInLevel2 = 10;
+        let gameStarted = false;
+        let lastTime = 0;
+
+        let currentGroundLevel = 540;
+        const PLAYER_SPEED = 300;
+        const JUMP_VELOCITY = -1100;
+        const GRAVITY = 2400;
+
+
+        let player = null;
+        
+        let showDebugHitboxes = false;
+
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if ((gameState === 'cutscene' || gameState === 'ending') && e.key === ' ') skipCutscene();
+            
+            if (e.key.toLowerCase() === 'h') showDebugHitboxes = !showDebugHitboxes;
+
+            // Level Skips
+            if (e.key === '1') { currentLevel = 0; skipCutscene(); }
+            if (e.key === '2') { currentLevel = 1; skipCutscene(); }
+            if (e.key === '3') { currentLevel = 2; skipCutscene(); }
+            if (e.key === '4') { currentLevel = 3; skipCutscene(); }
+            if (e.key === '5') { currentLevel = 4; skipCutscene(); }
+            if (e.key === '6') { currentLevel = 5; skipCutscene(); }
+
+            if (e.key === '8') { // For testing: skip to level complete cutscene
+                showLevelCompleteCutscene();
+            }
+        });
+        document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+        
+        function setupMobileControls() {
+            const controls = [
+                { id: 'mc-left', key: 'arrowleft' },
+                { id: 'mc-right', key: 'arrowright' },
+                { id: 'mc-jump', key: 'arrowup' },
+                { id: 'mc-punch', key: 'z' },
+                { id: 'mc-kick', key: 'x' }
+            ];
+
+            controls.forEach(control => {
+                const button = document.getElementById(control.id);
+                if (button) {
+                    button.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        keys[control.key] = true;
+                    }, { passive: false });
+
+                    button.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        keys[control.key] = false;
+                    }, { passive: false });
+                }
+            });
+        }
+        
+        let enemies = [];
+        let levelBoss = null;
+        let environmentObjects = [];
+        let projectiles = [];
+        let npc = null;
+        let backgroundElements = [];
+        let particles = [];
+
+        class Particle {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.life = 1.0;
+                
+                if (type === 'hit') {
+                    this.vx = (Math.random() - 0.5) * 400;
+                    this.vy = (Math.random() - 0.5) * 400;
+                    this.size = 4 + Math.random() * 4;
+                    this.color = `hsl(${Math.random() * 60 + 10}, 100%, 50%)`;
+                    this.decay = 2.0;
+                } else if (type === 'special') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 200 + Math.random() * 300;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.size = 6 + Math.random() * 6;
+                    this.color = `hsl(${Math.random() * 60 + 180}, 100%, 60%)`;
+                    this.decay = 1.5;
+                } else if (type === 'explosion') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 100 + Math.random() * 400;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.size = 8 + Math.random() * 12;
+                    this.color = `hsl(${Math.random() * 40 + 10}, 100%, ${50 + Math.random() * 30}%)`;
+                    this.decay = 1.2;
+                    this.vy -= 100;
+                } else if (type === 'spark') {
+                    this.vx = (Math.random() - 0.5) * 600;
+                    this.vy = (Math.random() - 0.5) * 600;
+                    this.size = 2 + Math.random() * 3;
+                    this.color = '#ffffff';
+                    this.decay = 3.0;
+                }
+            }
+
+            update(deltaTime) {
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+                this.vy += 200 * deltaTime;
+                this.life -= this.decay * deltaTime;
+                this.size *= 0.98;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createParticles(x, y, type, count = 1) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, type));
+            }
+        }
+
+        function updateParticles(deltaTime) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(deltaTime);
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(p => p.draw());
+        }
+
+        class BackgroundElement {
+            constructor(type) {
+                this.type = type;
+                this.x = Math.random() * canvas.width;
+                if (type === 'cloud') {
+                    this.y = Math.random() * 200;
+                    this.width = 100 + Math.random() * 100;
+                    this.height = 30 + Math.random() * 30;
+                    this.speed = 30 + Math.random() * 30;
+                } else { // bird
+                    this.y = 100 + Math.random() * 150;
+                    this.width = 20;
+                    this.height = 10;
+                    this.speed = 120 + Math.random() * 120;
+                }
+            }
+            update(deltaTime, playerVx = 0) {
+                const parallaxSpeedFactor = 0.2; // Adjust this value for more or less parallax
+                this.x -= (this.speed + playerVx * parallaxSpeedFactor) * deltaTime;
+                if (this.x + this.width < 0) {
+                    this.x = canvas.width;
+                }
+            }
+            draw() {
+                if (this.type === 'cloud') {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                } else {
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x + this.width / 2, this.y + this.height);
+                    ctx.lineTo(this.x + this.width, this.y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+
+
+        class NPC {
+            constructor(x, y) {
+                this.x = x; this.y = y; 
+                this.width = 48; this.height = 48; // Adjust based on sprite size
+                this.speed = 150; this.followDistance = 80;
+                this.currentAnimation = 'idleRight'; // Default animation
+                this.currentFrame = 0;
+                this.frameTimer = 0;
+                this.facing = 1; // 1 for right, -1 for left
+            }
+            update(deltaTime) {
+                const distToPlayer = this.x - player.x;
+                let moving = false;
+                if (Math.abs(distToPlayer) > this.followDistance) {
+                    this.x += Math.sign(player.x - this.x) * this.speed * deltaTime;
+                    this.facing = Math.sign(player.x - this.x);
+                    moving = true;
+                }
+
+                // Update animation state
+                if (moving) {
+                    this.currentAnimation = this.facing === 1 ? 'runRight' : 'runLeft';
+                } else {
+                    this.currentAnimation = this.facing === 1 ? 'idleRight' : 'idleLeft';
+                }
+
+                // Update animation frame
+                this.frameTimer += deltaTime;
+                const animation = margeryAnimations[this.currentAnimation];
+                if (this.frameTimer >= 1 / animation.frameRate) {
+                    this.currentFrame = (this.currentFrame + 1) % animation.frames.length;
+                    this.frameTimer = 0;
+                }
+            }
+            draw() {
+                ctx.save();
+                const animation = margeryAnimations[this.currentAnimation];
+                const currentSprite = animation.spriteSheet[this.currentFrame];
+                if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                    // Draw the sprite
+                    ctx.drawImage(currentSprite, this.x - this.width / 2, this.y - this.height, this.width, this.height);
+                } else {
+                    ctx.fillStyle = 'blue';
+                    ctx.fillRect(this.x - this.width / 2, this.y - this.height, this.width, this.height);
+                }
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, vx, vy, type = 'bottle') {
+                this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.type = type;
+                this.width = (type === 'knife' || type === 'bike_shot') ? 40 : 10; // Wider for lasers
+                this.height = (type === 'knife') ? 15 : (type === 'bike_shot') ? 6 : 20;
+                this.rotation = 0; 
+                this.gravity = (type === 'bike_shot') ? 0 : 1200; // No gravity for bike shots
+            }
+            update(deltaTime) {
+                this.x += this.vx * deltaTime; 
+                this.vy += this.gravity * deltaTime;
+                this.y += this.vy * deltaTime;
+                if (this.type !== 'bike_shot') this.rotation += 12 * Math.sign(this.vx) * deltaTime;
+            }
+            draw() {
+                ctx.save();
+                
+                let scale = 1.0;
+                if (currentLevel === 5) {
+                    scale = getEntityScale(this.y);
+                }
+                
+                ctx.translate(this.x, this.y);
+                ctx.scale(scale, scale);
+                
+                if (this.type === 'bike_shot') {
+                    // Laser Visuals
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ffff';
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                    
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+                    ctx.fillRect(-this.width/2 - 10, -this.height/2 - 2, this.width + 20, this.height + 4);
+                } else if (this.type === 'enemy_bike_shot') {
+                    // Red Enemy Laser
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff3300';
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                    
+                    ctx.fillStyle = 'rgba(255, 50, 0, 0.5)';
+                    ctx.fillRect(-this.width/2 - 10, -this.height/2 - 2, this.width + 20, this.height + 4);
+                } else {
+                    ctx.rotate(this.rotation);
+                    let color = '#ccc';
+                    switch(this.type){
+                        case 'bottle': color = '#6A8A6A'; break;
+                        case 'chair': color = '#8B4513'; break;
+                        case 'lamp': color = '#aab8c2'; break;
+                        case 'monitor': color = '#333'; break;
+                        case 'knife': color = '#c0c0c0'; break;
+                    }
+                    ctx.fillStyle = color;
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
+                ctx.restore();
+            }
+        }
+
+        class EnvironmentObject {
+            constructor(x, y, type) {
+                this.x = x; this.y = y; this.type = type;
+                this.width = (type==='chair') ? 30 : (type==='lamp') ? 15 : (type==='monitor') ? 25 : (type==='barrel') ? 20 : (type==='roadblock') ? 40 : (type==='spikes') ? 20 : 10; 
+                this.height = (type==='chair') ? 40 : (type==='lamp') ? 50 : (type==='monitor') ? 20 : 20;
+                this.health = 1; 
+                // Obstacle properties
+                this.speed = 300; // Horizontal speed (matches road scroll)
+                this.active = true;
+                this.damage = 10; // Damage to player on collision
+                if(type === 'laser') this.active = true;
+            }
+
+            update(deltaTime) {
+                // Move obstacles leftward (negative x direction)
+                this.x -= this.speed * deltaTime;
+                
+                // Remove obstacles that go off-screen left
+                if (this.x + this.width < 0) {
+                    return 'remove'; // Signal to remove this object
+                }
+                return null; // Keep object
+            }
+            draw() {
+                if (['bottle', 'chair', 'lamp', 'monitor'].includes(this.type)) {
+                    let color = '#ccc';
+                    switch(this.type){
+                        case 'bottle': color = '#6A8A6A'; break;
+                        case 'chair': color = '#8B4513'; break;
+                        case 'lamp': color = '#aab8c2'; break;
+                        case 'monitor': color = '#333'; break;
+                    }
+                    ctx.fillStyle = color;
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                } else if (this.type === 'destructible_wall') {
+                    ctx.fillStyle = 'rgba(200, 200, 220, 0.5)';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                } else if (['barrel', 'roadblock', 'spikes'].includes(this.type)) {
+                    // Draw obstacles
+                    ctx.fillStyle = '#8B4513'; // Saddle brown for obstacles
+                    if (this.type === 'barrel') {
+                        ctx.fillStyle = '#A0522D'; // Sienna
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y - this.height/2, this.width/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#8B4513';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    } else if (this.type === 'roadblock') {
+                        ctx.fillStyle = '#FF4500'; // Orange red
+                        ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                    } else if (this.type === 'spikes') {
+                        ctx.fillStyle = '#8B0000'; // Dark red
+                        ctx.beginPath();
+                        for (let i = 0; i < 3; i++) {
+                            const spikeX = this.x - this.width/2 + (this.width * i / 2);
+                            const spikeY = this.y - this.height;
+                            ctx.lineTo(spikeX, spikeY);
+                            ctx.lineTo(spikeX - 5, this.y - this.height + 15);
+                            ctx.lineTo(spikeX + 5, this.y - this.height + 15);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                } else if (this.type === 'laser') {
+                    const laserCycle = Math.floor(Date.now() / 1000) % 4; // 4 second cycle
+                    const isWarning = laserCycle === 0 || laserCycle === 1; // Warning for 2s
+                    const isActive = laserCycle === 2 || laserCycle === 3; // Active for 2s
+                    
+                    this.active = isActive;
+                    
+                    if (isWarning) {
+                        // Warning phase - blinking yellow/red indicator
+                        ctx.fillStyle = 'rgba(255, 255, 0, ' + (0.3 + 0.4 * Math.sin(Date.now() / 100)) + ')';
+                        ctx.fillRect(this.x - this.width, 0, this.width * 3, canvas.height);
+                        // Warning text
+                        ctx.fillStyle = '#ffff00';
+                        ctx.font = 'bold 24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('⚠ LASER CHARGING ⚠', this.x + this.width/2, 50);
+                    } else if (isActive) {
+                        // Active phase - solid red laser
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+                        ctx.fillRect(this.x, 0, this.width, canvas.height);
+                        // Laser beam effect
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = '#ff0000';
+                        ctx.fillStyle = '#ff4444';
+                        ctx.fillRect(this.x, 0, this.width, canvas.height);
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+        }
+        
+        class Enemy {
+            constructor(x, y, type = 'grunt') {
+                this.x = x; this.y = y; this.type = type;
+                this.width = 120; this.height = 120; // Uniform size for now
+                this.health = type === 'grunt' ? 25 : (type === 'heavy' ? 50 : 35);
+                this.maxHealth = this.health;
+                this.facing = -1; 
+                this.state = 'idle'; 
+                this.attackCooldown = 0; 
+                this.stunned = 0;
+                this.hitFlash = 0; // New hit flash timer
+                this.speed = (type === 'heavy' ? 18 : (type === 'security' ? 42 : 30));
+                this.vx = 0;
+                this.vy = 0;
+
+                // New Animation state
+                this.currentAnimation = 'walk';
+                this.currentFrame = 0;
+                this.frameTimer = 0;
+
+                this.animations = {
+                    walk: { 
+                        spriteSheet: this.type === 'grunt' ? gruntWalkFrames : securityWalkFrames, 
+                        frames: this.type === 'grunt' ? [0,1,2,3,4,5,6] : [0,1,2,3,4], 
+                        frameRate: 10 
+                    },
+                    punch: { 
+                        spriteSheet: this.type === 'grunt' ? gruntPunchFrames : securityPunchFrames, 
+                        frames: [0,1,2], 
+                        frameRate: 10 
+                    },
+                    kick: { 
+                        spriteSheet: this.type === 'grunt' ? gruntKickFrames : securityBatFrames, 
+                        frames: [0,1,2], 
+                        frameRate: 10 
+                    }
+                };
+            }
+            update(deltaTime) {
+                // Apply horizontal friction to knockback
+                this.vx *= 0.9;
+                this.x += this.vx * deltaTime;
+
+                if (currentLevel === 5) {
+                    // Motorbike chase mechanics
+                    const scale = getEntityScale(this.y);
+                    
+                    // Smoothly weave between lanes to target player's lane!
+                    const waveY = Math.sin(Date.now() / 600) * 40;
+                    const targetY = Math.max(500, Math.min(700, player.y + waveY));
+                    this.y += (targetY - this.y) * 1.2 * deltaTime;
+                    
+                    // Weave horizontally, staying on the right side of the screen
+                    const targetX = player.x + 400 + Math.sin(Date.now() / 400) * 120;
+                    this.x += (targetX - this.x) * 1.5 * deltaTime;
+                    this.facing = -1; // Always face Jack
+                    
+                    if (this.stunned > 0) {
+                        this.stunned -= deltaTime * 1000;
+                        if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+                        return;
+                    }
+                    if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+
+                    // Shooting cooldown
+                    if (this.attackCooldown <= 0) {
+                        projectiles.push(new Projectile(this.x - 45 * scale, this.y - 20 * scale, -1000, 0, 'enemy_bike_shot'));
+                        this.attackCooldown = 1500 + Math.random() * 2000;
+                    } else {
+                        this.attackCooldown -= deltaTime * 1000;
+                    }
+                    
+                    this.currentAnimation = 'walk';
+                    this.frameTimer += deltaTime;
+                    const anim = this.animations[this.currentAnimation];
+                    if (this.frameTimer >= 1 / anim.frameRate) {
+                        this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
+                        this.frameTimer = 0;
+                    }
+                    return;
+                }
+
+                if (this.y < currentGroundLevel) { // Dropping in
+                    this.vy += GRAVITY * deltaTime;
+                    this.y += this.vy * deltaTime;
+                    if (this.y >= currentGroundLevel) {
+                        this.y = currentGroundLevel;
+                    }
+                    return;
+                }
+
+                if (this.stunned > 0) { 
+                    this.stunned -= deltaTime * 1000; 
+                    if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+                    return; 
+                }
+
+                if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+
+                const distToPlayer = this.x - player.x;
+                const attackRange = this.type === 'heavy' ? 70 : 60;
+                const followRange = 400;
+
+                if (Math.abs(distToPlayer) > followRange) { 
+                    this.currentAnimation = 'walk'; 
+                } 
+                else if (Math.abs(distToPlayer) > attackRange) {
+                    this.x += (distToPlayer > 0 ? -1 : 1) * this.speed * deltaTime;
+                    this.facing = distToPlayer > 0 ? -1 : 1;
+                    this.currentAnimation = 'walk';
+                }
+                
+                if (Math.abs(distToPlayer) < attackRange && this.attackCooldown <= 0) {
+                    this.attack();
+                }
+
+                if (this.attackCooldown > 0) {
+                    this.attackCooldown -= deltaTime * 1000;
+                    if (this.attackCooldown <= 0) this.currentAnimation = 'walk';
+                }
+
+                // Update animation frame
+                this.frameTimer += deltaTime;
+                const anim = this.animations[this.currentAnimation];
+                if (this.frameTimer >= 1 / anim.frameRate) {
+                    this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
+                    this.frameTimer = 0;
+                }
+            }
+            attack() {
+                const damage = this.type === 'heavy' ? 12 : 8;
+                this.attackCooldown = (this.type === 'heavy' ? 1500 : (this.type === 'security' ? 750 : 1000));
+                
+                this.currentAnimation = Math.random() > 0.5 ? 'punch' : 'kick';
+                this.currentFrame = 0;
+                this.frameTimer = 0;
+
+                if (Math.abs(this.x - player.x) < this.width && player.invulnerable <= 0) {
+                    player.health = Math.max(0, player.health - damage);
+                    player.energy = Math.min(player.maxEnergy, player.energy + 3);
+                    player.invulnerable = 500;
+                    updateUI();
+                }
+            }
+            takeDamage(damage) {
+                this.health -= damage; 
+                this.stunned = 300;
+                this.hitFlash = 100; // Flash for 100ms
+                
+                // Knockback physics
+                this.vx = player.facing * 200;
+                this.vy = -80; // upward lift 
+
+                if (this.health <= 0) {
+                    player.energy = Math.min(player.maxEnergy, player.energy + 10);
+                    return true;
+                }
+                return false;
+            }
+
+            drawHealthBar() {
+                const scale = currentLevel === 5 ? getEntityScale(this.y) : 1;
+                const barWidth = 40 * scale;
+                const barHeight = 5 * scale;
+                const x = this.x - barWidth / 2;
+                const y = this.y - this.height / 2 - 10 * scale; // above head
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x, y, barWidth, barHeight);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(x, y, barWidth * (this.health / this.maxHealth), barHeight);
+            }
+            draw() {
+                ctx.save();
+                
+                let scale = 1.0;
+                if (currentLevel === 5) {
+                    scale = getEntityScale(this.y);
+                }
+                
+                const w = this.width * scale;
+                const h = this.height * scale;
+
+                if (currentLevel === 5) {
+                    // Draw a futuristic neon motorcycle in perspective!
+                    ctx.save();
+                    ctx.shadowBlur = 10 * scale;
+                    ctx.shadowColor = '#ff3300';
+                    
+                    // Chassis
+                    ctx.fillStyle = '#111115';
+                    ctx.strokeStyle = '#ff3300';
+                    ctx.lineWidth = 3 * scale;
+                    
+                    // Rear wheel
+                    ctx.beginPath();
+                    ctx.arc(this.x - 30 * this.facing * scale, this.y - 12 * scale, 15 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#ff6600';
+                    ctx.beginPath();
+                    ctx.arc(this.x - 30 * this.facing * scale, this.y - 12 * scale, 5 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Front wheel
+                    ctx.beginPath();
+                    ctx.arc(this.x + 30 * this.facing * scale, this.y - 12 * scale, 15 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(this.x + 30 * this.facing * scale, this.y - 12 * scale, 5 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Bike body frame (chassis lines)
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - 30 * this.facing * scale, this.y - 12 * scale);
+                    ctx.lineTo(this.x, this.y - 30 * scale);
+                    ctx.lineTo(this.x + 30 * this.facing * scale, this.y - 12 * scale);
+                    ctx.lineTo(this.x + 10 * this.facing * scale, this.y - 38 * scale);
+                    ctx.lineTo(this.x - 15 * this.facing * scale, this.y - 34 * scale);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Exhaust with glowing fire
+                    ctx.fillStyle = 'rgba(255, 100, 0, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - 40 * this.facing * scale, this.y - 18 * scale);
+                    ctx.lineTo(this.x - 60 * this.facing * scale, this.y - 14 * scale);
+                    ctx.lineTo(this.x - 40 * this.facing * scale, this.y - 10 * scale);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.restore();
+                    
+                    // Sitting on the motorcycle
+                    ctx.save();
+                    if (this.facing === 1) {
+                        ctx.translate(this.x + 5 * scale, this.y - 18 * scale);
+                        if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
+                        const anim = this.animations[this.currentAnimation];
+                        const currentSprite = anim.spriteSheet[this.currentFrame];
+                        if (currentSprite && currentSprite.complete) {
+                            ctx.drawImage(currentSprite, -w/2, -h, w, h);
+                        } else {
+                            ctx.fillStyle = '#ff4444';
+                            ctx.fillRect(-w/2, -h, w, h);
+                        }
+                    } else {
+                        ctx.translate(this.x - 5 * scale, this.y - 18 * scale);
+                        ctx.scale(-1, 1);
+                        if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
+                        const anim = this.animations[this.currentAnimation];
+                        const currentSprite = anim.spriteSheet[this.currentFrame];
+                        if (currentSprite && currentSprite.complete) {
+                            ctx.drawImage(currentSprite, -w/2, -h, w, h);
+                        } else {
+                            ctx.fillStyle = '#ff4444';
+                            ctx.fillRect(-w/2, -h, w, h);
+                        }
+                    }
+                    ctx.restore();
+                    
+                    // Exhaust sparks
+                    if (Math.random() < 0.2) {
+                        createParticles(this.x - 50 * this.facing * scale, this.y - 14 * scale, 'spark', 1);
+                    }
+                } else {
+                    const anim = this.animations[this.currentAnimation];
+                    const currentSprite = anim.spriteSheet[this.currentFrame];
+                    if (currentSprite && currentSprite.complete) {
+                        if (this.facing === -1) {
+                            ctx.translate(this.x + w / 2, this.y);
+                            ctx.scale(-1, 1);
+                            if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
+                            ctx.drawImage(currentSprite, -w / 2, -h, w, h);
+                        } else {
+                            if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
+                            ctx.drawImage(currentSprite, this.x - w / 2, this.y - h, w, h);
+                        }
+                    } else {
+                        let color = this.hitFlash > 0 ? '#ffffff' : (this.stunned > 0 ? '#ff9999' : '#ff4444');
+                        if(this.type === 'heavy') color = this.hitFlash > 0 ? '#ffffff' : (this.stunned > 0 ? '#aa6666' : '#884444');
+                        if(this.type === 'security') color = this.hitFlash > 0 ? '#ffffff' : (this.stunned > 0 ? '#6666aa' : '#444488');
+                        ctx.fillStyle = color;
+                        ctx.fillRect(this.x - w/2, this.y - h, w, h);
+                    }
+                }
+
+                if (this.health < this.maxHealth) {
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(this.x - 20 * scale, this.y - h - 10 * scale, 40 * scale, 4 * scale);
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(this.x - 20 * scale, this.y - h - 10 * scale, 40 * scale * (this.health / this.maxHealth), 4 * scale);
+                }
+
+                if (showDebugHitboxes) {
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(this.x - w/2, this.y - h, w, h);
+                }
+                ctx.restore();
+            }
+        }
+        
+        class Boss extends Enemy {
+             constructor(x, y) {
+                super(x, y, 'boss');
+                this.width = 90; this.height = 120; this.health = 150; this.maxHealth = 150;
+            }
+            draw() {
+                ctx.fillStyle = '#444488'; // Changed from red (#880000) to blue
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                this.drawHealthBar('Blue Grunt Boss'); // Changed label
+            }
+            drawHealthBar(name) {
+                ctx.fillStyle = '#333';
+                ctx.fillRect(canvas.width/2 - 100, 20, 200, 8);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(canvas.width/2 - 100, 20, 200 * (this.health / this.maxHealth), 8);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText(name, canvas.width/2 - 100, 15);
+            }
+        }
+
+        class PoliceBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); 
+                this.type = 'police_boss'; 
+                this.health = 300; 
+                this.maxHealth = 300;
+                this.width = 180; 
+                this.height = 140;
+                this.shootCooldown = 2000;
+                this.hoverTimer = 0;
+                this.isBlocking = false;
+                this.blockTimer = 3000;
+            }
+            update(deltaTime) {
+                this.vx *= 0.9;
+                this.x += this.vx * deltaTime;
+                
+                // Block timer for shielding
+                this.blockTimer -= deltaTime * 1000;
+                if (this.blockTimer <= 0) {
+                    this.isBlocking = !this.isBlocking;
+                    this.blockTimer = this.isBlocking ? 2000 : 4000;
+                }
+
+                if (this.stunned > 0) {
+                    this.stunned -= deltaTime * 1000;
+                    if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+                    return;
+                }
+                if (this.hitFlash > 0) this.hitFlash -= deltaTime * 1000;
+
+                // Move boss back and forth horizontally and vertically
+                this.hoverTimer += deltaTime * 2;
+                
+                // Weave up and down to align with or escape player!
+                const targetY = player.y + Math.sin(this.hoverTimer) * 30;
+                this.y += (targetY - this.y) * 1.5 * deltaTime;
+                this.y = Math.max(500, Math.min(700, this.y));
+
+                // Horizon weaving
+                const targetX = canvas.width - 250 + Math.sin(this.hoverTimer) * 100;
+                this.x += (targetX - this.x) * 2 * deltaTime;
+                this.facing = -1; // Always face left towards Jack
+                
+                // Laser shooting logic
+                this.shootCooldown -= deltaTime * 1000;
+                if (this.shootCooldown <= 0) {
+                    const scale = getEntityScale(this.y);
+                    // Fire 3-laser spread!
+                    projectiles.push(new Projectile(this.x - 70 * scale, this.y - 50 * scale, -1300, -100, 'enemy_bike_shot'));
+                    projectiles.push(new Projectile(this.x - 70 * scale, this.y - 40 * scale, -1300, 0, 'enemy_bike_shot'));
+                    projectiles.push(new Projectile(this.x - 70 * scale, this.y - 30 * scale, -1300, 100, 'enemy_bike_shot'));
+                    this.shootCooldown = 2000 + Math.random() * 1500;
+                }
+            }
+            takeDamage(damage) {
+                if (this.isBlocking) {
+                    // Shield absorbs damage, sparks!
+                    createParticles(this.x - 80 * getEntityScale(this.y), this.y - 45 * getEntityScale(this.y), 'spark', 5);
+                    return false;
+                }
+                return super.takeDamage(damage);
+            }
+            draw() {
+                ctx.save();
+                
+                const scale = getEntityScale(this.y);
+                const w = this.width * scale;
+                const h = this.height * scale;
+
+                // Add vibration
+                const vibrationY = Math.sin(Date.now() / 30) * 2 * scale;
+                ctx.translate(0, vibrationY);
+                
+                if (this.hitFlash > 0) {
+                    ctx.filter = 'brightness(3)';
+                }
+
+                // 1. Draw large Cyber-Police Armored Bike
+                ctx.shadowBlur = 15 * scale;
+                ctx.shadowColor = '#0066ff';
+                
+                // Rear Wheel (Giant)
+                ctx.fillStyle = '#0a0a0f';
+                ctx.strokeStyle = '#0066ff';
+                ctx.lineWidth = 5 * scale;
+                ctx.beginPath();
+                ctx.arc(this.x + 50 * scale, this.y - 25 * scale, 25 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Front Wheel (Giant)
+                ctx.beginPath();
+                ctx.arc(this.x - 50 * scale, this.y - 25 * scale, 25 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Heavy Chassis
+                ctx.fillStyle = '#1e272c';
+                ctx.strokeStyle = '#34495e';
+                ctx.lineWidth = 4 * scale;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 50 * scale, this.y - 25 * scale);
+                ctx.lineTo(this.x - 30 * scale, this.y - 70 * scale);
+                ctx.lineTo(this.x + 30 * scale, this.y - 60 * scale);
+                ctx.lineTo(this.x + 50 * scale, this.y - 25 * scale);
+                ctx.lineTo(this.x + 10 * scale, this.y - 15 * scale);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Shield / Guard Plate
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(this.x - 65 * scale, this.y - 85 * scale, 25 * scale, 55 * scale);
+                
+                // Police Siren (glowing blue and red)
+                const isRed = Math.floor(Date.now() / 150) % 2 === 0;
+                ctx.shadowColor = isRed ? 'red' : 'blue';
+                ctx.fillStyle = isRed ? '#ff0000' : '#0000ff';
+                ctx.beginPath();
+                ctx.arc(this.x + 15 * scale, this.y - 80 * scale, 8 * scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw Shield Barrier if blocking
+                if (this.isBlocking) {
+                    ctx.shadowColor = '#00ffff';
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+                    ctx.lineWidth = 3 * scale;
+                    ctx.beginPath();
+                    ctx.arc(this.x - 70 * scale, this.y - 50 * scale, 45 * scale, -Math.PI/2, Math.PI/2, true);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+                
+                // 2. Draw Police Commander sitting on the bike leaning forward
+                ctx.save();
+                ctx.translate(this.x, this.y - 60 * scale);
+                ctx.fillStyle = '#2c3e50';
+                ctx.strokeStyle = '#0066ff';
+                ctx.lineWidth = 2 * scale;
+                ctx.beginPath();
+                // Helmet
+                ctx.arc(-8 * scale, -30 * scale, 12 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                // Visor
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(-18 * scale, -34 * scale, 10 * scale, 5 * scale);
+                
+                // Torso
+                ctx.fillStyle = '#34495e';
+                ctx.beginPath();
+                ctx.moveTo(-20 * scale, -16 * scale);
+                ctx.lineTo(12 * scale, -16 * scale);
+                ctx.lineTo(20 * scale, 8 * scale);
+                ctx.lineTo(-12 * scale, 8 * scale);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                this.drawHealthBar('Police Boss - Commander');
+            }
+        }
+        
+        class AssassinBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); this.type = 'assassin'; this.health = 180; this.maxHealth = 180;
+                this.dodgeCooldown = 0; this.throwCooldown = 2000;
+            }
+            update(deltaTime) {
+                super.update(deltaTime);
+                const distToPlayer = this.x - player.x;
+                this.speed = 90;
+                if (this.dodgeCooldown > 0) this.dodgeCooldown -= deltaTime * 1000;
+                if (this.throwCooldown > 0) this.throwCooldown -= deltaTime * 1000;
+                if (Math.abs(distToPlayer) < 100 && player.state === 'attacking' && this.dodgeCooldown <= 0) {
+                    this.x += Math.sign(distToPlayer) * 100; this.dodgeCooldown = 1500;
+                }
+                if (this.throwCooldown <= 0) {
+                    projectiles.push(new Projectile(this.x, this.y - 40, -360 * this.facing, -240, 'knife'));
+                    this.throwCooldown = 2500;
+                }
+            }
+            draw() {
+                ctx.fillStyle = '#333333';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                this.drawHealthBar('Assassin');
+            }
+        }
+
+        class ExecutiveBoss extends Boss {
+             constructor(x, y) {
+                super(x, y); this.type = 'executive'; this.health = 250; this.maxHealth = 250;
+                this.isCharging = false; this.chargeCooldown = 4000; this.chargeTargetX = 0;
+            }
+            update(deltaTime) {
+                this.chargeCooldown -= deltaTime * 1000;
+                if(this.isCharging){
+                    this.x += Math.sign(this.chargeTargetX - this.x) * 480 * deltaTime; // Charge speed
+                    if(Math.abs(this.x - this.chargeTargetX) < 20){
+                        this.isCharging = false;
+                        this.stunned = 500;
+                    }
+                } else {
+                    super.update(deltaTime);
+                    if(this.chargeCooldown <= 0){
+                        this.isCharging = true;
+                        this.chargeTargetX = player.x;
+                        this.chargeCooldown = 5000;
+                    }
+                }
+            }
+            draw() {
+                ctx.fillStyle = '#D4AF37'; // Gold/yellow armor
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                if(this.isCharging) {
+                     ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                     ctx.fillRect(0, this.y - this.height, canvas.width, this.height);
+                }
+                this.drawHealthBar('Executive');
+            }
+        }
+
+        class HandlerBoss extends Boss {
+            constructor(x, y) {
+                super(x, y); this.type = 'handler'; this.health = 300; this.maxHealth = 300;
+                this.teleportCooldown = 3000;
+            }
+            update(deltaTime) {
+                super.update(deltaTime);
+                this.speed = 120;
+                this.teleportCooldown -= deltaTime * 1000;
+                if (this.teleportCooldown <= 0) {
+                    this.x = player.x + (player.facing * -100); // Teleport behind player
+                    this.teleportCooldown = 4000;
+                }
+            }
+             draw() {
+                ctx.fillStyle = '#6a0dad'; // Purple suit
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                this.drawHealthBar('The Handler');
+            }
+        }
+
+
+        let gameAssets = {}; // Global variable to store loaded images
+
+        function startGame() {
+            console.log("startGame() called"); // Debugging line
+            if (gameStarted) return;
+            gameStarted = true;
+            document.getElementById('titleScreen').style.display = 'none';
+            startScreenMusic.pause();
+            startScreenMusic.currentTime = 0;
+
+            // Preload all images
+            preloadImages(allImagePaths)
+                .then(assets => {
+                    gameAssets = assets; // Store loaded assets globally
+                    level1BackgroundImage = gameAssets['images/level_1_background.gif'];
+                    level2RooftopBackgroundImage = gameAssets['images/google_ai_studio_2025-09-01t15_32_37.197z.png'];
+                    level3JungleBackgroundImage = gameAssets['images/level_3_jungle.png'];
+                    level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png'];
+                    level5TruckBackgroundImage = gameAssets['images/level_2_truck.png'];
+
+                    // Jack Rebourne Assets
+                    drJackIdleFrames[0] = gameAssets['jack_rebourne_sprites/idle_jack.png'];
+                    
+                    drJackRunFrames = [
+                        gameAssets['jack_rebourne_sprites/run/frame_000.png'], gameAssets['jack_rebourne_sprites/run/frame_001.png'],
+                        gameAssets['jack_rebourne_sprites/run/frame_002.png'], gameAssets['jack_rebourne_sprites/run/frame_003.png'],
+                        gameAssets['jack_rebourne_sprites/run/frame_004.png'], gameAssets['jack_rebourne_sprites/run/frame_005.png'],
+                        gameAssets['jack_rebourne_sprites/run/frame_006.png'], gameAssets['jack_rebourne_sprites/run/frame_007.png'],
+                        gameAssets['jack_rebourne_sprites/run/frame_008.png'], gameAssets['jack_rebourne_sprites/run/frame_009.png']
+                    ];
+
+                    drJackJumpUpFrames = [
+                        gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_0.png'], 
+                        gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_01png.png']
+                    ];
+                    drJackJumpAirFrames = [
+                        gameAssets['jack_rebourne_sprites/jump/2.air/frame_02_air.png'],
+                        gameAssets['jack_rebourne_sprites/jump/2.air/frame_03_air.png'],
+                        gameAssets['jack_rebourne_sprites/jump/2.air/frame_04_air.png']
+                    ];
+                    drJackJumpLandFrames = [
+                        gameAssets['jack_rebourne_sprites/jump/3.land/frame_05_land.png'],
+                        gameAssets['jack_rebourne_sprites/jump/3.land/frame_06_land.png']
+                    ];
+
+                    drJackJabFrames = [
+                        gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_001.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_002.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_003.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_004.png']
+                    ];
+                    drJackPunchFrames = [
+                        gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_001.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_002.png']
+                    ];
+                    drJackRightKickFrames = [
+                        gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_001.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_002.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_003.png']
+                    ];
+                    drJackUppercutFrames = [
+                        gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_01.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_02.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_03.png']
+                    ];
+                    drJackLeftKickFrames = [
+                        gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_001.png'],
+                        gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_002.png']
+                    ];
+
+                    drJackJumpAttack1Frames = [
+                        gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_000.png'],
+                        gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_001.png']
+                    ];
+                    drJackJumpAttack2Frames = [
+                        gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_002.png'],
+                        gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_003.png']
+                    ];
+
+                    drJackBikeFrames = [];
+                    for(let i=0; i<15; i++) {
+                        let num = i.toString().padStart(3, '0');
+                        drJackBikeFrames.push(gameAssets[`jack_rebourne_sprites/bike/frame_${num}.png`]);
+                    }
+
+                    drJackBikeShoot1Frames = [
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_001.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_002.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_003.png']
+                    ];
+                    drJackBikeShoot2Frames = [
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_004.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_005.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_006.png']
+                    ];
+                    drJackBikeShoot3Frames = [
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_007.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_008.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_009.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_010.png']
+                    ];
+                    drJackBikeShoot4Frames = [
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_011.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_012.png'],
+                        gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_013.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_014.png']
+                    ];
+
+                    drJackHurtFrames = [
+                        gameAssets['jack_rebourne_sprites/hurt/frame_001.png'], gameAssets['jack_rebourne_sprites/hurt/frame_002.png'],
+                        gameAssets['jack_rebourne_sprites/hurt/frame_003.png'], gameAssets['jack_rebourne_sprites/hurt/frame_004.png'],
+                        gameAssets['jack_rebourne_sprites/hurt/frame_005.png']
+                    ];
+                    drJackDeathFrames = [
+                        gameAssets['jack_rebourne_sprites/hurt/frame_006_fall.png'],
+                        gameAssets['jack_rebourne_sprites/hurt/frame_010_death.png']
+                    ];
+
+                    // Enemy Assets
+                    gruntWalkFrames = [];
+                    for(let i=0; i<7; i++) gruntWalkFrames.push(gameAssets[`new_enemies/grunt/grunt_walk/frame_00${i}.png`]);
+                    
+                    gruntPunchFrames = [
+                        gameAssets['new_enemies/grunt/grunt_attack/punch/frame_000.png'],
+                        gameAssets['new_enemies/grunt/grunt_attack/punch/frame_001.png'],
+                        gameAssets['new_enemies/grunt/grunt_attack/punch/frame_002.png']
+                    ];
+                    gruntKickFrames = [
+                        gameAssets['new_enemies/grunt/grunt_attack/kick/frame_000.png'],
+                        gameAssets['new_enemies/grunt/grunt_attack/kick/frame_003.png'],
+                        gameAssets['new_enemies/grunt/grunt_attack/kick/frame_004.png']
+                    ];
+
+                    securityWalkFrames = [];
+                    for(let i=0; i<5; i++) securityWalkFrames.push(gameAssets[`new_enemies/security/walk/frame_00${i}.png`]);
+
+                    securityPunchFrames = [
+                        gameAssets['new_enemies/security/attack_punch/frame_000.png'],
+                        gameAssets['new_enemies/security/attack_punch/frame_007.png'],
+                        gameAssets['new_enemies/security/attack_punch/frame_008.png']
+                    ];
+                    securityBatFrames = [
+                        gameAssets['new_enemies/security/attack_bat/frame_005.png'],
+                        gameAssets['new_enemies/security/attack_bat/frame_006.png']
+                    ];
+
+        // Define animations with variable frame durations (ms) and frame-specific hitboxes
+                    playerAnimations = {
+                        idle: { spriteSheet: drJackIdleFrames, frames: [0], frameRate: 1, durations: [1000] },
+                        running: { spriteSheet: drJackRunFrames, frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], frameRate: 15 },
+                        jump_up: { spriteSheet: drJackJumpUpFrames, frames: [0, 1], frameRate: 8, durations: [120, 80] },
+                        jump_air: { spriteSheet: drJackJumpAirFrames, frames: [0, 1, 2], frameRate: 10 },
+                        jump_land: { spriteSheet: drJackJumpLandFrames, frames: [0, 1], frameRate: 12, durations: [80, 150] },
+                        jab: { 
+                            spriteSheet: drJackJabFrames, 
+                            frames: [0, 1, 2, 3], 
+                            durations: [60, 60, 120, 100],
+                            hitboxes: [null, null, {x: 55, y: -45, w: 70, h: 25}, null] // Hit on frame 2
+                        },
+                        punch: { 
+                            spriteSheet: drJackPunchFrames, 
+                            frames: [0, 1], 
+                            durations: [80, 180],
+                            hitboxes: [null, {x: 60, y: -48, w: 80, h: 30}] // Hit on frame 1
+                        },
+                        kick: { 
+                            spriteSheet: drJackRightKickFrames, 
+                            frames: [0, 1, 2], 
+                            durations: [100, 60, 200],
+                            hitboxes: [null, {x: 70, y: -40, w: 90, h: 35}, null]
+                        },
+                        uppercut: { 
+                            spriteSheet: drJackUppercutFrames, 
+                            frames: [0, 1, 2], 
+                            durations: [150, 60, 250],
+                            hitboxes: [null, {x: 60, y: -70, w: 80, h: 60}, null]
+                        },
+                        left_kick: { 
+                            spriteSheet: drJackLeftKickFrames, 
+                            frames: [0, 1], 
+                            durations: [100, 250],
+                            hitboxes: [{x: 70, y: -50, w: 90, h: 40}, null]
+                        },
+                        jump_attack1: { spriteSheet: drJackJumpAttack1Frames, frames: [0, 1], frameRate: 15, hitboxes: [{x: 60, y: -40, w: 80, h: 40}, null] },
+                        jump_attack2: { spriteSheet: drJackJumpAttack2Frames, frames: [0, 1], frameRate: 15, hitboxes: [{x: 60, y: -20, w: 90, h: 50}, null] },
+                        bike: { spriteSheet: drJackBikeFrames, frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], frameRate: 15 },
+                        bike_shoot1: { spriteSheet: drJackBikeShoot1Frames, frames: [0, 1, 2], frameRate: 20 },
+                        bike_shoot2: { spriteSheet: drJackBikeShoot2Frames, frames: [0, 1, 2], frameRate: 20 },
+                        bike_shoot3: { spriteSheet: drJackBikeShoot3Frames, frames: [0, 1, 2, 3], frameRate: 20 },
+                        bike_shoot4: { spriteSheet: drJackBikeShoot4Frames, frames: [0, 1, 2, 3], frameRate: 20 },
+                        hurt: { spriteSheet: drJackHurtFrames, frames: [0, 1, 2, 3, 4], frameRate: 12 },
+                        death: { spriteSheet: drJackDeathFrames, frames: [0, 1], frameRate: 4 }
+                    };
+
+                    // NOW, create the player object that depends on the animations
+                    player = {
+                        x: 100, y: currentGroundLevel, width: 120, height: 120,
+                        health: 100, maxHealth: 100, energy: 0, maxEnergy: 100,
+                        vx: 0, vy: 0, grounded: true, facing: 1,
+                        state: 'idle',
+                        currentAnimation: 'idle',
+                        currentFrame: 0,
+                        frameTimer: 0,
+                        attackCombo: 0, 
+                        comboQueued: false,
+                        hitActive: false, // Prevents multiple hits per frame
+                        bikeShotType: 0,
+                        attackCooldown: 0, 
+                        invulnerable: 0,
+                        lastAttackType: ''
+                    };
+
+                    margeryIdleLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_idle left_0.png'];
+                    margeryIdleLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_idle left_1.png'];
+                    margeryIdleRightFrames[0] = gameAssets['images/margery_limited (1)/margery_idle right_0.png'];
+                    margeryIdleRightFrames[1] = gameAssets['images/margery_limited (1)/margery_idle right_1.png'];
+                    margeryJumpLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_jump left_0.png'];
+                    margeryJumpRightFrames[0] = gameAssets['images/margery_limited (1)/margery_jump right_0.png'];
+                    margeryRunLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_run left_0.png'];
+                    margeryRunLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_run left_1.png'];
+                    margeryRunLeftFrames[2] = gameAssets['images/margery_limited (1)/margery_run left_2.png'];
+                    margeryRunLeftFrames[3] = gameAssets['images/margery_limited (1)/margery_run left_3.png'];
+                    margeryRunLeftFrames[4] = gameAssets['images/margery_limited (1)/margery_run left_4.png'];
+                    margeryRunLeftFrames[5] = gameAssets['images/margery_limited (1)/margery_run left_5.png'];
+                    margeryRunRightFrames[0] = gameAssets['images/margery_limited (1)/margery_run right_0.png'];
+                    margeryRunRightFrames[1] = gameAssets['images/margery_limited (1)/margery_run right_1.png'];
+                    margeryRunRightFrames[2] = gameAssets['images/margery_limited (1)/margery_run right_2.png'];
+                    margeryRunRightFrames[3] = gameAssets['images/margery_limited (1)/margery_run right_3.png'];
+                    margeryRunRightFrames[4] = gameAssets['images/margery_limited (1)/margery_run right_4.png'];
+                    margeryRunRightFrames[5] = gameAssets['images/margery_limited (1)/margery_run right_5.png'];
+
+                    cutsceneImages[0] = gameAssets['images/cutscene1.png'];
+                    cutsceneImages[1] = gameAssets['images/cutscene2.png'];
+                    cutsceneImages[2] = gameAssets['images/cutscene3.png'];
+
+                    // Now that all images are loaded, proceed with game initialization
+                    startOpeningCutscene();
+                    gameLoop(0);
+                })
+                .catch(error => {
+                    console.error("Error preloading images:", error);
+                    alert("Failed to load game assets. Please check the console for details.");
+                });
+        }
+        
+        function startOpeningCutscene() {
+            gameState = 'cutscene';
+            cutsceneTimer = setTimeout(skipCutscene, 11500); // Adjusted total time for longer fade
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+            
+            cutsceneDiv.style.display = 'flex';
+            textDiv.style.display = 'none';
+            imageEl.style.display = 'block';
+
+            // Play start screen music when cutscene starts
+            startScreenMusic.play().catch(e => console.error("Error playing start screen music in cutscene:", e));
+
+            let currentImageIndex = 0;
+
+            const showNextImage = () => {
+                if (gameState !== 'cutscene' || currentImageIndex >= cutsceneImages.length) {
+                    return;
+                }
+
+                // Set fade-in duration
+                if (currentImageIndex === 2) { // Fading in the 3rd image (part of 2nd transition)
+                    imageEl.style.transition = 'opacity 1s ease-in-out';
+                } else {
+                    imageEl.style.transition = 'opacity 0.5s ease-in-out';
+                }
+                
+                // Fade in
+                imageEl.src = cutsceneImages[currentImageIndex].src;
+                imageEl.style.opacity = 1;
+
+                currentImageIndex++;
+
+                setTimeout(() => {
+                    if (gameState !== 'cutscene' || currentImageIndex > cutsceneImages.length) return;
+                    
+                    // Set fade-out duration
+                    let fadeOutDuration = 500;
+                    if (currentImageIndex === 2) { // Fading out the 2nd image (part of 2nd transition)
+                        fadeOutDuration = 1000;
+                        imageEl.style.transition = 'opacity 1s ease-in-out';
+                    } else {
+                        imageEl.style.transition = 'opacity 0.5s ease-in-out';
+                    }
+
+                    // Fade out
+                    imageEl.style.opacity = 0;
+                    
+                    setTimeout(showNextImage, fadeOutDuration);
+                }, 3000);
+            };
+            
+            imageEl.style.opacity = 0; // Initial state
+            showNextImage();
+        }
+        
+        function showLevel1StartScreen() {
+            gameState = 'cutscene'; // Keep game paused
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+
+            // Set image source and display
+            imageEl.src = gameAssets['images/who-am-i.png'].src; // Set the new image
+            imageEl.style.display = 'block';
+            imageEl.style.opacity = 1;
+
+            textDiv.innerHTML = 'LEVEL 1 START';
+            textDiv.style.display = 'block';
+            textDiv.style.color = '#fff';
+            textDiv.style.fontSize = '48px';
+            textDiv.style.textShadow = '2px 2px 8px #000';
+            textDiv.style.textAlign = 'center'; // Ensure text is centered
+
+            // Remove absolute positioning for text, rely on flexbox
+            textDiv.style.top = 'auto';
+            textDiv.style.left = 'auto';
+            textDiv.style.bottom = 'auto';
+            textDiv.style.transform = 'none'; // Remove transform for centering
+
+            cutsceneDiv.style.display = 'flex'; // Ensure flexbox is active
+
+            setTimeout(() => {
+                cutsceneDiv.style.display = 'none';
+                // Reset styles for other cutscenes
+                textDiv.style.fontSize = '28px';
+                textDiv.style.textShadow = '2px 2px 4px #000';
+                imageEl.style.objectFit = 'contain';
+                // Reset text position (these will be overridden by cutscene logic later)
+                textDiv.style.top = 'auto';
+                textDiv.style.left = '50%';
+                textDiv.style.bottom = '10%';
+                textDiv.style.transform = 'translateX(-50%)';
+                initLevel1();
+                gameState = 'playing';
+            }, 3000);
+        }
+
+        function skipCutscene() {
+            if (cutsceneTimer) clearTimeout(cutsceneTimer);
+            document.getElementById('cutscene').style.display = 'none';
+            document.getElementById('cutsceneImage').style.display = 'none'; // Hide image
+
+            const isStartingLevel1 = (currentLevel === 0);
+
+            if (isStartingLevel1) {
+                showLevel1StartScreen();
+            } else {
+                if (currentLevel === 1) initLevel2();
+                else if (currentLevel === 2) initLevel3();
+                else if (currentLevel === 3) initLevel4();
+                else if (currentLevel === 4) initLevel5();
+                else if (currentLevel === 5) initLevel6();
+                else {
+                     gameState = 'title';
+                     document.getElementById('titleScreen').style.display = 'flex';
+                }
+            }
+            
+            if (!isStartingLevel1 && (gameState === 'cutscene' || gameState === 'ending')) {
+                gameState = 'playing';
+            }
+        }
+        
+        
+        function initLevel1() {
+            stopAllMusic();
+            currentLevel = 1; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ 
+                new Enemy(960, currentGroundLevel, 'grunt'), 
+                new Enemy(1200, currentGroundLevel, 'grunt'),
+                new Enemy(1440, currentGroundLevel, 'security')
+            ];
+            levelBoss = null; environmentObjects = []; projectiles = []; npc = null; updateUI();
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        function initLevel2() {
+            stopAllMusic();
+            currentLevel = 2; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 620; // Lower floor for the rooftop/factory image
+            enemies = [
+                new Enemy(800, currentGroundLevel, 'grunt'),
+                new Enemy(1100, currentGroundLevel, 'security'),
+                new Enemy(1400, currentGroundLevel, 'grunt')
+            ]; 
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [];
+            updateUI();
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        function initLevel3() {
+            stopAllMusic();
+            currentLevel = 3; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ 
+                new Enemy(1200, currentGroundLevel, 'heavy'), 
+                new Enemy(1440, currentGroundLevel, 'security')
+            ];
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [ 
+                new EnvironmentObject(480, currentGroundLevel, 'chair'), new EnvironmentObject(960, currentGroundLevel, 'lamp'),
+                new EnvironmentObject(720, 0, 'destructible_wall')
+            ];
+            environmentObjects[2].width = 480; environmentObjects[2].height = 360;
+            updateUI();
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        function initLevel4() {
+            stopAllMusic();
+            currentLevel = 4; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ 
+                new Enemy(1440, currentGroundLevel, 'heavy'), 
+                new Enemy(1680, currentGroundLevel, 'security')
+            ];
+            levelBoss = null; projectiles = []; npc = new NPC(120, currentGroundLevel);
+            environmentObjects = [ new EnvironmentObject(720, currentGroundLevel, 'chair') ];
+            updateUI();
+            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+        }
+
+        function initLevel5() {
+            stopAllMusic();
+            currentLevel = 5; 
+            player.x = 200; 
+            player.y = 600; // Start in middle lane
+            player.health = 100; 
+            player.energy = 0;
+            player.facing = 1; // Force facing right for the bike level
+            player.lane = 1; // Start in middle lane (index 1)
+
+            player.targetLane = player.lane;
+            player.laneChangeTimer = 0;
+            currentGroundLevel = 580; // Highway perspective
+            enemies = []; levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [];
+            enemiesToSpawnInLevel2 = 20; // Reusing this counter for Level 5 now
+            level2EnemySpawnTimer = 1500;
+            
+            // Reset scrolling offsets
+            level5RoadOffset = 0;
+            level5CityOffset = 0;
+            
+            updateUI();
+            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+        }
+        
+        function initLevel6() {
+            stopAllMusic();
+            currentLevel = 6; player.x = 100; player.health = 100; player.energy = 0;
+            currentGroundLevel = 540;
+            enemies = [ 
+                new Enemy(960, currentGroundLevel, 'heavy', 300),
+                new Enemy(1200, currentGroundLevel, 'heavy', 300),
+                new Enemy(1500, currentGroundLevel, 'heavy', 300)
+            ];
+            levelBoss = null; projectiles = []; npc = null;
+            environmentObjects = [ new EnvironmentObject(1080, 0, 'laser'), new EnvironmentObject(1320, 0, 'laser') ];
+            environmentObjects[0].width = 24; environmentObjects[1].width = 24;
+            // Lasers now positioned between enemies for fair progression
+            updateUI();
+            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+        }
+
+
+        function checkLevelCompletion() {
+            if(currentLevel === 5 && enemiesToSpawnInLevel2 <= 0 && enemies.length === 0 && !levelBoss) {
+                 levelBoss = new PoliceBoss(1680, 600); // Spawn PoliceBoss in the middle of 2.5D road
+            }
+            else if (enemies.length === 0 && !levelBoss) {
+                if (currentLevel === 1) levelBoss = new Boss(1680, currentGroundLevel);
+                else if (currentLevel === 2) levelBoss = new AssassinBoss(1680, currentGroundLevel);
+                else if (currentLevel === 3) levelBoss = new ExecutiveBoss(1680, currentGroundLevel);
+                else if (currentLevel === 4) levelBoss = new HandlerBoss(1680, currentGroundLevel);
+                else if (currentLevel === 5) { /* PoliceBoss handled above */ }
+                else if (currentLevel === 6) showLevelCompleteCutscene();
+            }
+            if (levelBoss && levelBoss.health <= 0) {
+                levelBoss = null;
+                showLevelCompleteCutscene();
+            }
+        }
+        
+        function showLevelCompleteCutscene() {
+            gameState = 'cutscene';
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            const imageEl = document.getElementById('cutsceneImage');
+
+            // Reset styles that might have been set by other screens
+            textDiv.style.display = 'block';
+            textDiv.style.top = 'auto';
+            textDiv.style.left = 'auto';
+            textDiv.style.transform = 'none';
+            textDiv.style.color = '#ffffff';
+            textDiv.style.backgroundColor = 'transparent';
+            textDiv.style.opacity = '1';
+
+
+            let cutsceneText = '';
+            let cutsceneImage = '';
+
+            const levelCutsceneImages = [
+                'cutscenes/level_1_cutscene_1-memory-fragments.png',
+                'cutscenes/level_2_cutscene_rooftop-realization.png',
+                'cutscenes/level_3_cutscene_identity_crisis.png',
+                'cutscenes/level_4_cutscene_painful-memories.png',
+                'cutscenes/level_5_cutscene_dark-past-revealed.png',
+                'cutscenes/ending_cutscene.png' // Corresponds to level 6 text
+            ];
+            
+            if (currentLevel >= 1 && currentLevel <= 6) {
+                cutsceneImage = levelCutsceneImages[currentLevel - 1];
+            }
+
+            if (currentLevel === 1) {
+                cutsceneText = '"I remember... but this isn\'t right..."';
+            } else if (currentLevel === 2) {
+                cutsceneText = '"These moves... I never learned them in medical school."';
+            } else if (currentLevel === 3) {
+                cutsceneText = '"Dr. Jack Morrison... was that ever really my name?"';
+            } else if (currentLevel === 4) {
+                cutsceneText = '"They made me forget... but why?"';
+            } else if (currentLevel === 5) {
+                cutsceneText = '"I chose to forget the monster I became..."';
+            } else if (currentLevel === 6) {
+                cutsceneText = '"...but some things can\'t stay buried."';
+            }
+            
+            textDiv.innerHTML = cutsceneText;
+
+            if (cutsceneImage) {
+                imageEl.src = gameAssets[cutsceneImage].src;
+                imageEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'none';
+            }
+            
+            cutsceneDiv.style.display = 'flex';
+
+            cutsceneTimer = setTimeout(skipCutscene, 5000);
+        }
+        
+        function handleInput(deltaTime) {
+            if (gameState !== 'playing') return;
+            player.vx = 0;
+
+            // Level 5 Bike Logic — flat side-scrolling highway with lanes
+            if (currentLevel === 5) {
+                if (player.state !== 'attacking') {
+                    player.currentAnimation = 'bike';
+                }
+                
+                // Define lanes for the highway (y positions)
+                // Initialize player lane if not set
+                if (player.lane === undefined) {
+                    player.lane = 1; // Start in middle lane (index 1)
+                    player.y = laneYPositions[player.lane];
+                }
+                
+                // Horizontal movement (forward/backward)
+                if (keys['arrowleft'])  { player.vx = -1; player.facing = -1; }
+                if (keys['arrowright']) { player.vx =  1; player.facing =  1; }
+                
+                // Lane changing (up/down arrows) - buffered for smooth transitions
+                if (keys['arrowup'] && player.lane > 0) {
+                    keys['arrowup'] = false; // Consume tap
+                    player.targetLane = player.lane - 1;
+                    player.laneChangeTimer = 0.2; // seconds
+                }
+                if (keys['arrowdown'] && player.lane < laneYPositions.length - 1) {
+                    keys['arrowdown'] = false; // Consume tap
+                    player.targetLane = player.lane + 1;
+                    player.laneChangeTimer = 0.2; // seconds
+                }
+                
+                // Bike jump (space bar)
+                if (keys[' '] && player.jumpCount === undefined) {
+                    keys[' '] = false; // Consume tap
+                    player.jumpCount = 0;
+                    player.jumpSpeed = -15; // Initial jump velocity
+                    player.state = 'jumping';
+                    player.currentAnimation = 'bike';
+                    player.currentFrame = 0;
+                    player.frameTimer = 0;
+                }
+                
+                // Apply jump physics
+                if (player.jumpCount !== undefined) {
+                    player.y += player.jumpSpeed;
+                    player.jumpSpeed += 0.8; // Gravity
+                    
+                    // Check if landed back on lane
+                    if (player.y >= laneYPositions[player.lane]) {
+                        player.y = laneYPositions[player.lane];
+                        player.jumpCount = undefined;
+                        player.jumpSpeed = 0;
+                        if (player.state === 'jumping') {
+                            player.state = 'idle';
+                            player.currentAnimation = 'bike';
+                        }
+                    }
+                }
+                
+                if (keys['z'] && player.attackCooldown <= 0) {
+                    keys['z'] = false; // Consume tap
+                    player.state = 'attacking';
+                    player.bikeShotType = (player.bikeShotType || 0) % 4 + 1;
+                    player.currentAnimation = 'bike_shoot' + player.bikeShotType;
+                    player.currentFrame = 0;
+                    player.frameTimer = 0;
+                    
+                    const anim = playerAnimations[player.currentAnimation];
+                    player.attackCooldown = (anim.frames.length / 20) * 1000;
+                    
+                    projectiles.push(new Projectile(player.x + 60 * player.facing, player.y - 45, 1800 * player.facing, 0, 'bike_shot'));
+                }
+                return;
+            }
+
+            // Normal Platformer Inputs (now including Level 2)
+            if (player.state !== 'attacking' && player.state !== 'special' && player.state !== 'hurt') {
+                if (keys['arrowleft']) { 
+                    player.vx = -1; 
+                    player.facing = -1; 
+                    player.state = 'walking'; 
+                    if (player.grounded && player.currentAnimation !== 'running') {
+                        player.currentAnimation = 'running';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                    }
+                }
+                else if (keys['arrowright']) { 
+                    player.vx = 1; 
+                    player.facing = 1; 
+                    player.state = 'walking'; 
+                    if (player.grounded && player.currentAnimation !== 'running') {
+                        player.currentAnimation = 'running';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                    }
+                }
+                else { 
+                    player.vx = 0; 
+                    if(player.grounded && player.currentAnimation !== 'idle') {
+                        player.state = 'idle';
+                        player.currentAnimation = 'idle';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                    }
+                }
+
+                if (keys['arrowup'] && player.grounded) { 
+                    player.vy = JUMP_VELOCITY; 
+                    player.grounded = false; 
+                    player.currentAnimation = 'jump_up';
+                    player.currentFrame = 0;
+                    player.frameTimer = 0;
+                }
+            }
+
+            // Attack Inputs (Z = Light, X = Heavy)
+            if (keys['z']) {
+                keys['z'] = false; // Consume tap
+                if (!player.grounded) {
+                    if (player.attackCooldown <= 0) {
+                        player.state = 'attacking';
+                        player.currentAnimation = 'jump_attack1';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                        player.attackCooldown = 400;
+                    }
+                } else {
+                    if (keys['x'] && player.energy >= player.maxEnergy) {
+                        keys['x'] = false;
+                        performSpecialMove();
+                    } else {
+                        performLightAttack();
+                    }
+                }
+            } else if (keys['x']) {
+                keys['x'] = false; // Consume tap
+                if (!player.grounded) {
+                    if (player.attackCooldown <= 0) {
+                        player.state = 'attacking';
+                        player.currentAnimation = 'jump_attack2';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                        player.attackCooldown = 400;
+                    }
+                } else {
+                    performHeavyAttack();
+                }
+            }
+
+            if (keys['e']) {
+                keys['e'] = false; 
+                performInteraction();
+            }
+        }
+        
+        function performInteraction() {
+            for (let i = environmentObjects.length - 1; i >= 0; i--) {
+                const obj = environmentObjects[i];
+                if (obj.type !== 'destructible_wall' && obj.type !== 'laser' && Math.abs(player.x - obj.x) < 40) {
+                    projectiles.push(new Projectile(player.x, player.y - 40, 360 * player.facing, -300, obj.type));
+                    environmentObjects.splice(i, 1);
+                    return; 
+                }
+            }
+        }
+
+        function performLightAttack() {
+            if (player.state === 'attacking') {
+                // Buffer the next hit if we are in the middle of an attack
+                player.comboQueued = true;
+                return;
+            }
+
+            player.state = 'attacking'; 
+            player.attackCombo = 1;
+            player.comboQueued = false;
+            initiateAttackAnimation('jab');
+        }
+        
+        function performHeavyAttack() {
+            if (player.state === 'attacking') return;
+            player.state = 'attacking'; 
+            player.attackCombo = 0; 
+            player.comboQueued = false; // Reset combo queue for heavy attack
+            player.lastAttackType = 'heavy';
+            initiateAttackAnimation('kick');
+        }
+
+        function initiateAttackAnimation(animName) {
+            if (!animName || !playerAnimations[animName]) {
+                console.error("Attempted to initiate invalid animation:", animName);
+                player.state = 'idle';
+                player.currentAnimation = 'idle';
+                return;
+            }
+            player.currentAnimation = animName;
+            player.currentFrame = 0;
+            player.frameTimer = 0;
+            player.hitActive = false;
+            
+            const anim = playerAnimations[player.currentAnimation];
+            let totalDuration = anim.durations ? anim.durations.reduce((a, b) => a + b, 0) : (anim.frames.length * 100);
+            player.attackCooldown = totalDuration;
+        }
+        
+        function performSpecialMove() {
+            player.state = 'special'; player.attackCooldown = 3000; player.energy = 0; player.invulnerable = 3000;
+            createParticles(player.x, player.y - player.height/2, 'special', 30);
+            
+            let primaryTarget = null; let closestDist = 150;
+            [...enemies, levelBoss].filter(e => e).forEach(enemy => {
+                const dist = enemy.x - player.x;
+                if ((player.facing > 0 ? dist > 0 : dist < 0) && Math.abs(dist) < closestDist) {
+                    closestDist = Math.abs(dist); primaryTarget = enemy;
+                }
+            });
+            if (primaryTarget) {
+                 if (primaryTarget.takeDamage(88) && primaryTarget !== levelBoss) {
+                    enemies = enemies.filter(e => e !== primaryTarget);
+                 }
+            }
+            [...enemies, levelBoss].filter(e => e && e !== primaryTarget && Math.abs(e.x - player.x) < 150).forEach(e => {
+                if (e.takeDamage(15) && e !== levelBoss) {
+                    enemies = enemies.filter(enemy => enemy !== e);
+                }
+            });
+            const specialHitbox = {x: player.x, width: 300};
+            environmentObjects.forEach((wall, index) => {
+                if (wall.type === 'destructible_wall' && specialHitbox.x + specialHitbox.width/2 > wall.x && specialHitbox.x - specialHitbox.width/2 < wall.x + wall.width) {
+                    if(--wall.health <= 0) environmentObjects.splice(index, 1);
+                }
+            });
+            updateUI();
+        }
+        
+        function updatePlayer(deltaTime) {
+            // Death check
+            if (player.health <= 0 && player.state !== 'death') {
+                player.state = 'death';
+                player.currentAnimation = 'death';
+                player.currentFrame = 0;
+                player.frameTimer = 0;
+            }
+
+            if (player.state === 'death') {
+                player.frameTimer += deltaTime * 1000;
+                const anim = playerAnimations['death'];
+                if (player.currentFrame < anim.frames.length - 1) {
+                    if (player.frameTimer >= 250) { // Fixed slow death
+                        player.currentFrame++;
+                        player.frameTimer = 0;
+                    }
+                }
+                return;
+            }
+
+            // Movement — Level 5 uses same horizontal physics as other levels
+            player.x += player.vx * PLAYER_SPEED * deltaTime;
+            
+            if (!player.grounded) {
+                player.vy += GRAVITY * deltaTime;
+                player.y += player.vy * deltaTime;
+
+                if (player.state !== 'attacking') {
+                    if (player.vy < -200) {
+                        if (player.currentAnimation !== 'jump_up' && currentLevel !== 5) {
+                            player.currentAnimation = 'jump_up';
+                            player.currentFrame = 0;
+                            player.frameTimer = 0;
+                        }
+                    } else {
+                        if (player.currentAnimation !== 'jump_air' && currentLevel !== 5) {
+                            player.currentAnimation = 'jump_air';
+                            player.currentFrame = 0;
+                            player.frameTimer = 0;
+                        }
+                    }
+                }
+
+                if (player.y >= currentGroundLevel) {
+                    player.y = currentGroundLevel;
+                    player.vy = 0;
+                    player.grounded = true;
+                    if (player.state !== 'attacking') {
+                        player.state = 'landing';
+                        player.currentAnimation = currentLevel === 5 ? 'bike' : 'jump_land';
+                        player.currentFrame = 0;
+                        player.frameTimer = 0;
+                        player.attackCooldown = 200;
+                    }
+                }
+            } else if (player.y < currentGroundLevel && currentLevel !== 2) {
+                player.grounded = false;
+                player.vy = 0;
+            }
+
+            player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, player.x));
+
+            // Lane change smoothing (Level 5)
+            if (currentLevel === 5 && player.laneChangeTimer > 0) {
+                player.laneChangeTimer -= deltaTime;
+                if (player.laneChangeTimer <= 0) {
+                    // Time's up, snap to lane
+                    player.lane = player.targetLane;
+                    player.laneChangeTimer = 0;
+                    player.y = laneYPositions[player.lane];
+                } else {
+                    // Smoothly interpolate towards target lane
+                    const t = 1.0 - (player.laneChangeTimer / 0.2); // 0 at start, 1 at end
+                    const targetY = laneYPositions[player.targetLane];
+                    player.y = player.y + (targetY - player.y) * t;
+                }
+            }
+            
+            if (player.attackCooldown > 0) {
+                player.attackCooldown -= deltaTime * 1000;
+            }
+
+            if (player.invulnerable > 0) player.invulnerable -= deltaTime * 1000;
+
+            // Animation update with variable timing and hitbox checking
+            player.frameTimer += deltaTime * 1000; 
+            const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle'];
+            let duration = animation.durations ? animation.durations[player.currentFrame] : (1000 / (animation.frameRate || 10));
+
+            if (player.frameTimer >= duration) {
+                const nonLooping = [
+                    'jab', 'punch', 'kick', 'uppercut', 'left_kick', 
+                    'jump_attack1', 'jump_attack2', 'jump_land', 
+                    'bike_shoot1', 'bike_shoot2', 'bike_shoot3', 'bike_shoot4',
+                    'death', 'hurt'
+                ];
+                
+                if (nonLooping.includes(player.currentAnimation)) {
+                    if (player.currentFrame < animation.frames.length - 1) {
+                        player.currentFrame++;
+                        player.frameTimer = 0;
+                        player.hitActive = false; // Reset hit for new frame
+                    } else {
+                        // Animation COMPLETE
+                        if (player.state === 'attacking' && player.comboQueued && player.attackCombo > 0 && player.attackCombo < 5) {
+                            player.comboQueued = false;
+                            player.attackCombo++;
+                            const comboMap = { 2: 'punch', 3: 'kick', 4: 'uppercut', 5: 'left_kick' };
+                            initiateAttackAnimation(comboMap[player.attackCombo]);
+                        } else {
+                            player.state = 'idle';
+                            player.attackCombo = 0;
+                            player.comboQueued = false;
+                            player.currentAnimation = player.vx !== 0 ? 'running' : 'idle';
+                            player.currentFrame = 0;
+                            player.frameTimer = 0;
+                        }
+                    }
+                } else {
+                    const oldFrame = player.currentFrame;
+                    player.currentFrame = (player.currentFrame + 1) % animation.frames.length;
+                    if (player.currentFrame !== oldFrame) player.hitActive = false;
+                    player.frameTimer = 0;
+                }
+            }
+
+            // Hitbox Detection
+            if (animation.hitboxes && animation.hitboxes[player.currentFrame] && !player.hitActive) {
+                const hb = animation.hitboxes[player.currentFrame];
+                const hitX = player.x + (hb.x * player.facing);
+                const hitY = player.y + hb.y;
+                const hitWidth = hb.w;
+                const hitHeight = hb.h;
+
+                let damage = 7;
+                if (player.currentAnimation === 'punch') damage = 10;
+                if (player.currentAnimation === 'kick') damage = 12;
+                if (player.currentAnimation === 'uppercut') damage = 15;
+                if (player.currentAnimation === 'left_kick') damage = 18;
+                if (player.currentAnimation.startsWith('jump_attack')) damage = 10;
+
+                let hitSomething = false;
+                [...enemies, levelBoss].filter(e => e).forEach((enemy, index) => {
+                    const enemyRect = {
+                        x: enemy.x - enemy.width/2,
+                        y: enemy.y - enemy.height,
+                        w: enemy.width,
+                        h: enemy.height
+                    };
+
+                    if (hitX + hitWidth/2 > enemyRect.x && hitX - hitWidth/2 < enemyRect.x + enemyRect.w &&
+                        hitY + hitHeight/2 > enemyRect.y && hitY - hitHeight/2 < enemyRect.y + enemyRect.h) {
+                        
+                        if (enemy.takeDamage(damage) && enemy !== levelBoss) enemies.splice(enemies.indexOf(enemy), 1);
+                        player.energy = Math.min(player.maxEnergy, player.energy + 3);
+                        createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 5);
+                        hitSomething = true;
+                    }
+                });
+
+                if (hitSomething) player.hitActive = true;
+            }
+        }
+
+        function executeNextComboHit() {
+            // Deprecated - logic moved to updatePlayer for smoother flow
+        }
+        
+        function updateUI() {
+            document.getElementById('healthBar').style.width = `${player.health / player.maxHealth * 100}%`;
+            const energyBar = document.getElementById('energyBar');
+            energyBar.style.width = `${player.energy / player.maxEnergy * 100}%`;
+            energyBar.classList.toggle('pulse', player.energy >= player.maxEnergy);
+        }
+        
+        function drawPlayer() {
+            ctx.save();
+            if (player.invulnerable > 0 && Math.floor(Date.now() / 100) % 2) {
+                ctx.globalAlpha = 0.5;
+            }
+
+            const animation = playerAnimations[player.currentAnimation];
+            if (!animation) {
+                console.error("Missing animation:", player.currentAnimation);
+                ctx.restore();
+                return;
+            }
+
+            const currentSprite = animation.spriteSheet[player.currentFrame]; 
+            
+            // Perspective scaling for Level 5
+            let scale = 1.0;
+            if (currentLevel === 5) {
+                scale = getEntityScale(player.y);
+                // Highway vibration
+                const vibrationY = Math.sin(Date.now() / 40) * 1.5 * scale;
+                ctx.translate(0, vibrationY);
+                // Tilt bike up when jumping
+                let tiltAngle = 0;
+                if (player.state === "jumping" && player.currentAnimation === "bike") {
+                    // Define lane positions (same as in Level 5 bike logic)
+                    // Tilt up based on jump progress - maximum 15 degrees tilt
+                    const jumpProgress = 1 - ((player.y - laneYPositions[player.lane]) / 150); // 0 when on ground, 1 at peak
+                    tiltAngle = -15 * Math.sin(jumpProgress * Math.PI / 2); // Negative for tilting forward/up
+                }
+                if (tiltAngle !== 0) {
+                    ctx.translate(player.x, player.y - h/2);
+                    ctx.rotate(tiltAngle * Math.PI / 180);
+                    ctx.translate(-player.x, -(player.y - h/2));
+                }
+            }
+            
+            const w = player.width * scale;
+            const h = player.height * scale;
+
+            if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                // Handle facing direction
+                if (player.facing === -1) {
+                    ctx.translate(player.x + w / 2, player.y);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(currentSprite, -w / 2, -h, w, h);
+                } else {
+                    ctx.drawImage(currentSprite, player.x - w / 2, player.y - h, w, h);
+                }
+            } else {
+                // Flash red if sprite is missing
+                ctx.fillStyle = 'red';
+                ctx.fillRect(player.x - w / 2, player.y - h, w, h);
+            }
+            
+            // Debug Hitboxes
+            if (showDebugHitboxes) {
+                // Player body
+                ctx.strokeStyle = 'cyan';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(player.x - player.width/2, player.y - player.height, player.width, player.height);
+
+                // Attack hitbox
+                const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle'];
+                if (animation.hitboxes && animation.hitboxes[player.currentFrame]) {
+                    const hb = animation.hitboxes[player.currentFrame];
+                    const hitX = player.x + (hb.x * player.facing);
+                    const hitY = player.y + hb.y;
+                    ctx.strokeStyle = player.hitActive ? 'red' : 'yellow';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(hitX - hb.w/2, hitY - hb.h/2, hb.w, hb.h);
+                }
+            }
+            
+            // Special move visual glow
+            if (player.state === 'special') {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'yellow';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x - player.width / 2, player.y - player.height, player.width, player.height);
+            }
+            ctx.restore();
+        }
+        
+        function drawLevel1Background() {
+            // Draw a black background as a fallback
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (level1BackgroundImage.complete && level1BackgroundImage.naturalWidth > 0) {
+                const bgWidth = level1BackgroundImage.naturalWidth;
+                const bgHeight = level1BackgroundImage.naturalHeight;
+
+                // Scale the image to fit the canvas height, maintaining aspect ratio
+                const scale = canvas.height / bgHeight;
+                const scaledWidth = bgWidth * scale;
+                const scaledHeight = canvas.height;
+
+                // Draw the background image statically (no parallax)
+                ctx.drawImage(level1BackgroundImage, 
+                    0, 0, 
+                    scaledWidth, scaledHeight
+                );
+            }
+        }
+
+        function drawLevel2Background() {
+            if (level2RooftopBackgroundImage.complete && level2RooftopBackgroundImage.naturalWidth > 0) {
+                // Draw the rooftop image
+                ctx.drawImage(level2RooftopBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#111';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            backgroundElements.forEach(el => el.draw());
+        }
+
+        function drawLevel3Background() {
+            if (level3JungleBackgroundImage.complete && level3JungleBackgroundImage.naturalWidth > 0) {
+                ctx.drawImage(level3JungleBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#8B4513'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+            }
+        }
+        
+        function drawLevel4Background() {
+            if (level4SunsetBackgroundImage.complete && level4SunsetBackgroundImage.naturalWidth > 0) {
+                ctx.drawImage(level4SunsetBackgroundImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#5D6D7E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#EAECEE'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height-currentGroundLevel);
+            }
+        }
+
+        function drawLevel5Background() {
+            // === FLAT HORIZONTAL HIGHWAY (side-scrolling) ===
+
+            // 1. Night sky gradient
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, currentGroundLevel);
+            skyGrad.addColorStop(0, '#05010d');
+            skyGrad.addColorStop(0.6, '#120325');
+            skyGrad.addColorStop(1.0, '#2a054a');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, currentGroundLevel);
+
+            // 2. Scrolling neon city skyline (parallax layer)
+            ctx.save();
+            const bOff = level5CityOffset % 380;
+            const numB = Math.ceil(canvas.width / 140) + 2;
+            for (let i = -1; i < numB; i++) {
+                const bx = i * 140 - bOff;
+                const bh = 90 + ((Math.abs(i) * 31) % 17) * 9;
+                const bw = 70 + ((Math.abs(i) *  7) % 5)  * 14;
+                ctx.fillStyle = '#120325';
+                ctx.fillRect(bx, currentGroundLevel - bh, bw, bh);
+                // Windows
+                ctx.fillStyle = 'rgba(255,255,120,0.25)';
+                for (let wy = currentGroundLevel - bh + 15; wy < currentGroundLevel - 15; wy += 20) {
+                    for (let wx = bx + 10; wx < bx + bw - 10; wx += 16) {
+                        if ((wx + wy + i) % 3 === 0) ctx.fillRect(wx, wy, 3, 3);
+                    }
+                }
+            }
+            ctx.restore();
+
+            // 3. Road surface (flat, fills from currentGroundLevel to bottom)
+            ctx.fillStyle = '#1a1d21';
+            ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+
+            // 4. Glowing road edge lines
+            ctx.save();
+            ctx.shadowBlur = 12; ctx.shadowColor = '#ff6600';
+            ctx.strokeStyle = '#ff6600'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, currentGroundLevel); ctx.lineTo(canvas.width, currentGroundLevel); ctx.stroke();
+            ctx.shadowColor = '#ff3300';
+            ctx.strokeStyle = '#ff3300'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, canvas.height - 4); ctx.lineTo(canvas.width, canvas.height - 4); ctx.stroke();
+            ctx.restore();
+
+            // 5. Scrolling dashed centre line
+            ctx.save();
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            const dashW = 70, dashH = 8, gap = 60;
+            const period = dashW + gap;
+            const dashOff = level5RoadOffset % period;
+            const laneY = currentGroundLevel + (canvas.height - currentGroundLevel) / 2 - dashH / 2;
+            for (let x = -period + dashOff; x < canvas.width + period; x += period) {
+                ctx.fillRect(x, laneY, dashW, dashH);
+            }
+            ctx.restore();
+        }
+
+        function drawLevel6Background() {
+            ctx.fillStyle = '#1C1C1C'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            for(let i=0; i<20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random()*canvas.width, 0);
+                ctx.lineTo(Math.random()*canvas.width, canvas.height);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#333'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+        }
+
+        function drawBeachBackground() {
+            ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.arc(240, 180, 72, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#00BFFF'; ctx.fillRect(0, 450, canvas.width, canvas.height - 450);
+            ctx.fillStyle = '#F0E68C'; ctx.fillRect(0, currentGroundLevel, canvas.width, canvas.height - currentGroundLevel);
+        }
+
+        function drawEndingScene() {
+            cutsceneTimer -= 1000/60;
+            drawBeachBackground();
+
+            player.x = canvas.width / 2;
+            player.y = currentGroundLevel;
+            
+            ctx.fillStyle = '#4444ff';
+            ctx.fillRect(player.x - player.width/2, player.y - player.height, player.width, player.height);
+            
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x - 15, player.y - 55, 30, 10);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = '36px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText("Finally... free.", canvas.width / 2, 150);
+
+            if (cutsceneTimer <= 0) {
+                gameState = 'title';
+                document.getElementById('titleScreen').style.display = 'flex';
+                currentLevel = 0; 
+            }
+        }
+
+
+        function gameLoop(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            if (gameState === 'title') {
+                 // The loop is running, but we wait for the user to click "Start Game"
+            } else if (gameState === 'cutscene' && currentLevel === 0) {
+                // Opening cutscene is handled by setTimeout in startOpeningCutscene
+            } else if (gameState === 'ending') {
+                drawEndingScene();
+            } else if (gameState === 'playing') {
+                handleInput(deltaTime);
+                updatePlayer(deltaTime);
+                if (npc) npc.update(deltaTime);
+
+                if (currentLevel === 2 || currentLevel === 5) {
+                    if (currentLevel === 2) {
+                        backgroundElements.forEach(el => el.update(deltaTime, player.vx));
+                        level2EnemySpawnTimer -= deltaTime * 1000;
+                        if(level2EnemySpawnTimer <= 0 && enemiesToSpawnInLevel2 > 0) {
+                            enemies.push(new Enemy(Math.random() * (canvas.width - 200) + 100, -50));
+                            enemiesToSpawnInLevel2--;
+                            level2EnemySpawnTimer = 3000 + Math.random() * 2000;
+                        }
+                    } else                if (currentLevel === 5) {
+                    // Horizontal highway scroll offsets
+                    level5RoadOffset += 500 * deltaTime;
+                    level5CityOffset +=  40 * deltaTime;
+
+                    // Define lanes for enemy spawning (matching player lanes)
+                    const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length)];
+
+                    // Spawn enemies from off-screen right at random lane
+                    level2EnemySpawnTimer -= deltaTime * 1000;
+                    if (level2EnemySpawnTimer <= 0 && enemiesToSpawnInLevel2 > 0) {
+                        enemies.push(new Enemy(canvas.width + 100, randomLane));
+                        enemiesToSpawnInLevel2--;
+                        level2EnemySpawnTimer = 2000 + Math.random() * 2000;
+
+                    // Spawn obstacles in random lanes
+                    level5ObstacleSpawnTimer -= deltaTime * 1000;
+                    if (level5ObstacleSpawnTimer <= 0) {
+                        const laneYPositions = [500, 580, 660];
+                        const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length)];
+                        // Spawn different types of obstacles
+                        const obstacleTypes = ['barrel', 'roadblock', 'spikes'];
+                        const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                        environmentObjects.push(new EnvironmentObject(canvas.width + 100, randomLane, obstacleType));
+                        level5ObstacleSpawnTimer = 1500 + Math.random() * 1000;
+                    }
+                    }
+                }
+                }
+
+
+                projectiles.forEach((p, pIndex) => {
+                    p.update(deltaTime);
+                    let hit = false;
+                    
+                    if (currentLevel === 5) {
+                        // 2.5D proximity laser collisions
+                        if (p.type === 'enemy_bike_shot') {
+                            if (Math.abs(p.y - player.y) < 25 && Math.abs(p.x - player.x) < 40 && player.invulnerable <= 0) {
+                                player.health = Math.max(0, player.health - 8);
+                                player.invulnerable = 500;
+                                updateUI();
+                                hit = true;
+                                createParticles(player.x, player.y - 30 * getEntityScale(player.y), 'hit', 5);
+                            }
+                        } else if (p.type === 'bike_shot') {
+                            [...enemies, levelBoss].filter(e => e).forEach((enemy) => {
+                                if (Math.abs(p.y - enemy.y) < 25 && Math.abs(p.x - enemy.x) < 45) {
+                                    if (enemy.takeDamage(10)) {
+                                        if (enemy === levelBoss) {
+                                            // Boss health check handled by checkLevelCompletion
+                                        } else {
+                                            enemies.splice(enemies.indexOf(enemy), 1);
+                                        }
+                                        createParticles(enemy.x, enemy.y - 30 * getEntityScale(enemy.y), 'explosion', 15);
+                                    }
+                                    hit = true;
+                                }
+                            });
+                        }
+                    } else {
+                        // Normal level collisions
+                        if (p.type === 'knife' && Math.abs(p.x - player.x) < 20 && Math.abs(p.y - (player.y - player.height/2)) < player.height/2) {
+                            player.health = Math.max(0, player.health - 10);
+                            player.invulnerable = 500; updateUI(); hit = true;
+                        } else {
+                             [...enemies, levelBoss].filter(e => e).forEach((enemy, eIndex) => {
+                                if (Math.abs(p.x - enemy.x) < (p.width + enemy.width) / 2) {
+                                    if (enemy.takeDamage(10) && enemy !== levelBoss) enemies.splice(eIndex, 1);
+                                    hit = true;
+                                }
+                            });
+                        }
+                    }
+                    
+                    if (hit || p.x < -100 || p.x > canvas.width + 100 || p.y > 750) projectiles.splice(pIndex, 1);
+                });
+                
+                environmentObjects.forEach(obj => {
+                    if(obj.type === 'laser' && obj.active && Math.abs(player.x - (obj.x + obj.width/2)) < player.width/2) {
+                        player.health = 0; updateUI(); // Instant death
+                    }
+                });
+
+                enemies.forEach(e => e.update(deltaTime));
+                if (levelBoss) levelBoss.update(deltaTime);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (currentLevel === 1) drawLevel1Background();
+                else if (currentLevel === 2) drawLevel2Background();
+                else if (currentLevel === 3) drawLevel3Background();
+                else if (currentLevel === 4) drawLevel4Background();
+                else if (currentLevel === 5) drawLevel5Background();
+                else if (currentLevel === 6) drawLevel6Background();
+                
+                // Standard flat rendering for all levels
+                projectiles.forEach(p => p.draw());
+                // Update and filter environment objects (obstacles)
+                environmentObjects = environmentObjects.filter(obj => {
+                    const result = obj.update(deltaTime);
+                    return result !== 'remove'; // Keep if not removed
+                });
+                environmentObjects.forEach(obj => obj.draw());
+                if(npc) npc.draw();
+                enemies.forEach(e => e.draw());
+                if (levelBoss) levelBoss.draw();
+                drawPlayer();
+                
+                checkLevelCompletion();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const titleScreen = document.getElementById('titleScreen');
+            if (titleScreen) {
+                titleScreen.addEventListener('click', startGame);
+            }
+            setupMobileControls(); // Activate mobile controls
+        });
+    </script>
+</body>
+</html>
+

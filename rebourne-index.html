@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReBOURNE: Jack Unleashed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            color: white;
+        }
+        
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #333;
+            image-rendering: pixelated;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .health-bar, .energy-bar {
+            width: 200px;
+            height: 20px;
+            border: 2px solid #fff;
+            margin: 5px 0;
+            position: relative;
+            background: #333;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4444ff, #6666ff);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .energy-fill.pulse {
+            animation: energyPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes energyPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .cutscene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .cutscene-text {
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-align: center;
+            margin: 20px;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+        
+        .cutscene-skip {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        @keyframes flashRed {
+            0%, 100% { background: #000; }
+            50% { background: #440000; }
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #000011, #001122);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+            animation: titleGlow 2s infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: #ff4444;
+            text-shadow: 0 0 10px #ff4444;
+            margin-bottom: 40px;
+        }
+        
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .start-btn:hover {
+            background: #ff6666;
+            transform: scale(1.05);
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 20px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+        }
+    </style>
+</head>
+<body>
+    <div class="title-screen" id="titleScreen">
+        <h1 class="title">ReBOURNE</h1>
+        <h2 class="subtitle">Jack Unleashed</h2>
+        <button class="start-btn" onclick="startGame()">START GAME</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    
+    <div class="game-ui">
+        <div>Dr. Jack</div>
+        <div class="health-bar">
+            <div class="health-fill" id="healthBar" style="width: 100%;"></div>
+        </div>
+        <div>Energy</div>
+        <div class="energy-bar">
+            <div class="energy-fill" id="energyBar" style="width: 0%;"></div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        A - Light Attack | S - Heavy Attack | E - Use Environment | Arrow Keys - Move | A+S (Full Energy) - Special Move
+    </div>
+    
+    <div class="cutscene" id="cutscene" style="display: none;">
+        <div class="cutscene-text" id="cutsceneText"></div>
+        <div class="cutscene-skip">Press SPACE to skip</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameState = 'title'; // 'title', 'cutscene', 'playing'
+        let currentLevel = 1;
+        let cutsceneFrame = 0;
+        let cutsceneTimer = 0;
+        
+        // Player object
+        const player = {
+            x: 100,
+            y: 300,
+            width: 40,
+            height: 60,
+            health: 100,
+            maxHealth: 100,
+            energy: 0,
+            maxEnergy: 100,
+            vx: 0,
+            vy: 0,
+            grounded: true,
+            facing: 1, // 1 = right, -1 = left
+            state: 'idle', // idle, walking, attacking, special
+            attackCombo: 0,
+            attackCooldown: 0,
+            invulnerable: 0
+        };
+        
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (gameState === 'cutscene' && e.key === ' ') {
+                endCutscene();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        // Enemies array
+        let enemies = [];
+        
+        // Environmental objects
+        let environmentObjects = [];
+        
+        class EnvironmentObject {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type; // 'cart', 'bed', 'iv_stand'
+                this.width = type === 'bed' ? 60 : 40;
+                this.height = type === 'iv_stand' ? 80 : 50;
+                this.throwable = type !== 'bed';
+                this.health = type === 'bed' ? 20 : 10;
+                this.maxHealth = this.health;
+            }
+            
+            draw() {
+                let color;
+                switch(this.type) {
+                    case 'cart': color = '#666666'; break;
+                    case 'bed': color = '#888888'; break;
+                    case 'iv_stand': color = '#aaaaaa'; break;
+                    default: color = '#555555';
+                }
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                
+                // Type indicators
+                ctx.fillStyle = '#ffffff';
+                if (this.type === 'iv_stand') {
+                    // IV bag
+                    ctx.fillRect(this.x - 5, this.y - this.height, 10, 15);
+                    // Stand pole
+                    ctx.fillRect(this.x - 2, this.y - this.height + 15, 4, 35);
+                } else if (this.type === 'cart') {
+                    // Cart wheels
+                    ctx.fillRect(this.x - 15, this.y - 10, 8, 8);
+                    ctx.fillRect(this.x + 7, this.y - 10, 8, 8);
+                }
+            }
+        }
+        
+        // Enemy class
+        class Enemy {
+            constructor(x, y, type = 'grunt') {
+                this.x = x;
+                this.y = y;
+                this.width = type === 'heavy' ? 45 : 35;
+                this.height = type === 'heavy' ? 65 : 55;
+                this.health = type === 'grunt' ? 10 : (type === 'heavy' ? 25 : 35);
+                this.maxHealth = this.health;
+                this.vx = 0;
+                this.facing = -1;
+                this.state = 'idle';
+                this.attackCooldown = 0;
+                this.stunned = 0;
+                this.type = type;
+                this.speed = type === 'heavy' ? 0.3 : (type === 'security' ? 0.7 : 0.5);
+            }
+            
+            update() {
+                if (this.stunned > 0) {
+                    this.stunned--;
+                    return;
+                }
+                
+                // AI behavior based on type
+                const distToPlayer = Math.abs(this.x - player.x);
+                const attackRange = this.type === 'heavy' ? 80 : 60;
+                const followRange = this.type === 'security' ? 100 : 50;
+                
+                if (distToPlayer > followRange) {
+                    if (this.x < player.x) {
+                        this.x += this.speed;
+                        this.facing = 1;
+                    } else {
+                        this.x -= this.speed;
+                        this.facing = -1;
+                    }
+                }
+                
+                // Attack patterns based on type
+                if (distToPlayer < attackRange && this.attackCooldown <= 0) {
+                    this.attack();
+                }
+                
+                if (this.attackCooldown > 0) {
+                    this.attackCooldown--;
+                }
+            }
+            
+            attack() {
+                const damage = this.type === 'heavy' ? 12 : (this.type === 'security' ? 10 : 8);
+                const cooldown = this.type === 'heavy' ? 90 : (this.type === 'security' ? 45 : 60);
+                
+                this.attackCooldown = cooldown;
+                if (Math.abs(this.x - player.x) < 50 && player.invulnerable <= 0) {
+                    player.health -= damage;
+                    player.energy = Math.min(player.maxEnergy, player.energy + 3);
+                    player.invulnerable = 30;
+                    updateUI();
+                }
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+                this.stunned = 15;
+                if (this.health <= 0) {
+                    player.energy = Math.min(player.maxEnergy, player.energy + 10);
+                    return true; // Enemy died
+                }
+                return false;
+            }
+            
+            draw() {
+                // Enemy body with different colors per type
+                let color;
+                switch(this.type) {
+                    case 'heavy': color = this.stunned > 0 ? '#aa4444' : '#884444'; break;
+                    case 'security': color = this.stunned > 0 ? '#4444aa' : '#444488'; break;
+                    default: color = this.stunned > 0 ? '#ff6666' : '#ff4444';
+                }
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                
+                // Type-specific details
+                ctx.fillStyle = '#ffffff';
+                if (this.type === 'security') {
+                    // Security badge
+                    ctx.fillRect(this.x - 5, this.y - this.height + 15, 10, 8);
+                } else if (this.type === 'heavy') {
+                    // Heavy muscle definition
+                    ctx.fillRect(this.x - 10, this.y - this.height + 20, 20, 5);
+                }
+                
+                // Face direction indicator
+                ctx.fillRect(this.x + (this.facing * 10), this.y - this.height + 10, 8, 8);
+                
+                // Health bar above enemy
+                if (this.health < this.maxHealth) {
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(this.x - 20, this.y - this.height - 10, 40, 4);
+                    ctx.fillStyle = color;
+                    ctx.fillRect(this.x - 20, this.y - this.height - 10, 40 * (this.health / this.maxHealth), 4);
+                }
+            }
+        }
+        
+        function startGame() {
+            document.getElementById('titleScreen').style.display = 'none';
+            startOpeningCutscene();
+        }
+        
+        function startOpeningCutscene() {
+            gameState = 'cutscene';
+            cutsceneFrame = 0;
+            cutsceneTimer = 0;
+            document.getElementById('cutscene').style.display = 'flex';
+            showOpeningCutscene();
+        }
+        
+        function showOpeningCutscene() {
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            
+            // Animate the opening sequence
+            if (cutsceneFrame === 0) {
+                cutsceneDiv.style.background = '#001122';
+                cutsceneDiv.style.animation = 'flashRed 0.5s infinite';
+                textDiv.innerHTML = 'FACILITY LOCKDOWN<br/>SUBJECT CONTAINMENT BREACH<br/>EMERGENCY PROTOCOLS ACTIVATED';
+            } else if (cutsceneFrame === 180) { // 3 seconds at 60fps
+                textDiv.innerHTML = 'SUSPENSION CHAMBER MALFUNCTION<br/>LIFE SUPPORT CRITICAL<br/>SUBJECT 7 STATUS: AWAKENING';
+            } else if (cutsceneFrame === 300) { // 5 seconds
+                textDiv.innerHTML = 'DR. JACK...<br/>WHAT HAVE THEY DONE TO ME?';
+                cutsceneDiv.style.animation = '';
+                cutsceneDiv.style.background = '#000';
+            }
+            
+            cutsceneFrame++;
+            
+            if (cutsceneFrame >= 420) { // 7 seconds total
+                endCutscene();
+            }
+        }
+        
+        function endCutscene() {
+            document.getElementById('cutscene').style.display = 'none';
+            gameState = 'playing';
+            initLevel1();
+        }
+        
+        function showLevelCompleteCutscene() {
+            gameState = 'cutscene';
+            cutsceneFrame = 0;
+            const cutsceneDiv = document.getElementById('cutscene');
+            const textDiv = document.getElementById('cutsceneText');
+            
+            cutsceneDiv.style.display = 'flex';
+            cutsceneDiv.style.background = '#000';
+            cutsceneDiv.style.animation = '';
+            
+            textDiv.innerHTML = 'LEVEL 1 COMPLETE<br/><br/>Memory Fragment Recovered...<br/><br/>"I remember... but this isn\'t right..."';
+            
+            setTimeout(() => {
+                cutsceneDiv.style.display = 'none';
+                gameState = 'playing';
+                // Could transition to level 2 here
+                alert('Level 1 Complete! More levels coming soon...');
+                // Reset for replay
+                initLevel1();
+            }, 5000);
+        }
+        
+        // Level boss
+        let levelBoss = null;
+        
+        class Boss {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 60;
+                this.height = 80;
+                this.health = 100;
+                this.maxHealth = 100;
+                this.facing = -1;
+                this.state = 'idle';
+                this.attackCooldown = 0;
+                this.stunned = 0;
+                this.phase = 1;
+                this.specialCooldown = 0;
+            }
+            
+            update() {
+                if (this.stunned > 0) {
+                    this.stunned--;
+                    return;
+                }
+                
+                const distToPlayer = Math.abs(this.x - player.x);
+                
+                // Phase 2 when health drops below 50%
+                if (this.health < 50 && this.phase === 1) {
+                    this.phase = 2;
+                }
+                
+                // Movement
+                if (distToPlayer > 80) {
+                    if (this.x < player.x) {
+                        this.x += 1.2;
+                        this.facing = 1;
+                    } else {
+                        this.x -= 1.2;
+                        this.facing = -1;
+                    }
+                }
+                
+                // Special attack in phase 2
+                if (this.phase === 2 && this.specialCooldown <= 0 && distToPlayer < 120) {
+                    this.specialAttack();
+                } else if (distToPlayer < 80 && this.attackCooldown <= 0) {
+                    this.attack();
+                }
+                
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.specialCooldown > 0) this.specialCooldown--;
+            }
+            
+            attack() {
+                this.attackCooldown = 80;
+                if (Math.abs(this.x - player.x) < 70 && player.invulnerable <= 0) {
+                    player.health -= 15;
+                    player.energy = Math.min(player.maxEnergy, player.energy + 5);
+                    player.invulnerable = 40;
+                    updateUI();
+                }
+            }
+            
+            specialAttack() {
+                this.specialCooldown = 180;
+                // Area attack - hits player if within range
+                if (Math.abs(this.x - player.x) < 120 && player.invulnerable <= 0) {
+                    player.health -= 20;
+                    player.energy = Math.min(player.maxEnergy, player.energy + 8);
+                    player.invulnerable = 60;
+                    updateUI();
+                }
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+                this.stunned = 20;
+                if (this.health <= 0) {
+                    return true; // Boss defeated
+                }
+                return false;
+            }
+            
+            draw() {
+                // Boss body (larger, darker)
+                ctx.fillStyle = this.phase === 2 ? '#660000' : '#880000';
+                ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
+                
+                // Boss details
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(this.x - 8, this.y - this.height + 15, 16, 12); // Security chief badge
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(this.x + (this.facing * 15), this.y - this.height + 20, 10, 10);
+                
+                // Special attack warning
+                if (this.specialCooldown > 150) {
+                    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                    ctx.fillRect(this.x - 60, this.y - this.height - 10, 120, this.height + 10);
+                }
+                
+                // Boss health bar (larger, at top of screen)
+                ctx.fillStyle = '#333';
+                ctx.fillRect(50, 50, 200, 8);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(50, 50, 200 * (this.health / this.maxHealth), 8);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.fillText('Security Chief', 50, 45);
+            }
+        }
+        
+        function handleInput() {
+            if (gameState !== 'playing') return;
+            
+            player.vx = 0;
+            
+            // Movement
+            if (keys['arrowleft']) {
+                player.vx = -3;
+                player.facing = -1;
+                if (player.state === 'idle') player.state = 'walking';
+            }
+            if (keys['arrowright']) {
+                player.vx = 3;
+                player.facing = 1;
+                if (player.state === 'idle') player.state = 'walking';
+            }
+            if (keys['arrowup'] && player.grounded) {
+                player.vy = -12;
+                player.grounded = false;
+            }
+            
+            // Attacks
+            if (keys['a'] && player.attackCooldown <= 0) {
+                if (keys['s'] && player.energy >= player.maxEnergy) {
+                    // Special move
+                    performSpecialMove();
+                } else {
+                    // Light attack
+                    performLightAttack();
+                }
+            } else if (keys['s'] && player.attackCooldown <= 0) {
+                // Heavy attack
+                performHeavyAttack();
+            }
+            
+            if (!keys['arrowleft'] && !keys['arrowright'] && player.grounded && player.state !== 'attacking') {
+                player.state = 'idle';
+            }
+            
+            // Environmental interactions
+            checkEnvironmentInteraction();
+        }
+        
+        // Environmental interaction
+        function checkEnvironmentInteraction() {
+            if (!keys['e']) return;
+            
+            // Check for throwable objects nearby
+            environmentObjects.forEach((obj, index) => {
+                if (obj.throwable && Math.abs(obj.x - player.x) < 50 && Math.abs(obj.y - player.y) < 30) {
+                    // Throw object
+                    const throwDirection = player.facing;
+                    const damage = obj.type === 'iv_stand' ? 15 : 12;
+                    
+                    // Check if it hits enemies
+                    enemies.forEach((enemy, enemyIndex) => {
+                        if (Math.abs(enemy.x - (obj.x + throwDirection * 80)) < 40) {
+                            if (enemy.takeDamage(damage)) {
+                                enemies.splice(enemyIndex, 1);
+                            }
+                            player.energy = Math.min(player.maxEnergy, player.energy + 5);
+                        }
+                    });
+                    
+                    // Also check boss
+                    if (levelBoss && Math.abs(levelBoss.x - (obj.x + throwDirection * 80)) < 60) {
+                        levelBoss.takeDamage(damage);
+                    }
+                    
+                    // Remove object after throwing
+                    environmentObjects.splice(index, 1);
+                    updateUI();
+                }
+            });
+        }
+        }
+        
+        function performLightAttack() {
+            player.state = 'attacking';
+            player.attackCooldown = 20;
+            player.attackCombo++;
+            
+            if (player.attackCombo > 5) player.attackCombo = 1;
+            
+            // Attack enemies in range
+            enemies.forEach((enemy, index) => {
+                if (Math.abs(enemy.x - player.x) < 70 && Math.abs(enemy.y - player.y) < 30) {
+                    let damage = player.attackCombo === 5 ? 10 : 5; // Uppercut finisher does more damage
+                    if (enemy.takeDamage(damage)) {
+                        enemies.splice(index, 1);
+                    }
+                    player.energy = Math.min(player.maxEnergy, player.energy + 2);
+                }
+            });
+            
+            // Attack boss if present
+            if (levelBoss && Math.abs(levelBoss.x - player.x) < 70 && Math.abs(levelBoss.y - player.y) < 30) {
+                let damage = player.attackCombo === 5 ? 10 : 5;
+                levelBoss.takeDamage(damage);
+                player.energy = Math.min(player.maxEnergy, player.energy + 2);
+            }
+            
+            updateUI();
+        }
+        
+        function performHeavyAttack() {
+            player.state = 'attacking';
+            player.attackCooldown = 40;
+            player.attackCombo = 0;
+            
+            // Heavy attack has more range and damage
+            enemies.forEach((enemy, index) => {
+                if (Math.abs(enemy.x - player.x) < 90 && Math.abs(enemy.y - player.y) < 40) {
+                    if (enemy.takeDamage(15)) {
+                        enemies.splice(index, 1);
+                    }
+                    player.energy = Math.min(player.maxEnergy, player.energy + 4);
+                }
+            });
+            
+            // Attack boss if present
+            if (levelBoss && Math.abs(levelBoss.x - player.x) < 90 && Math.abs(levelBoss.y - player.y) < 40) {
+                levelBoss.takeDamage(15);
+                player.energy = Math.min(player.maxEnergy, player.energy + 4);
+            }if (enemy.takeDamage(15)) {
+                        enemies.splice(index, 1);
+                    }
+                    player.energy = Math.min(player.maxEnergy, player.energy + 4);
+                }
+            });
+            
+            updateUI();
+        }
+        
+        function performSpecialMove() {
+            player.state = 'special';
+            player.attackCooldown = 180; // 3 seconds
+            player.energy = 0;
+            player.invulnerable = 180;
+            
+            // Devastating area attack
+            enemies.forEach((enemy, index) => {
+                if (Math.abs(enemy.x - player.x) < 150) {
+                    if (enemy.takeDamage(88)) {
+                        enemies.splice(index, 1);
+                    }
+                }
+            });
+            
+            // Attack boss with special move
+            if (levelBoss && Math.abs(levelBoss.x - player.x) < 150) {
+                if (levelBoss.takeDamage(40)) {
+                    levelBoss = null;
+                    setTimeout(() => showLevelCompleteCutscene(), 1000);
+                }
+            }
+            
+            // Screen shake effect
+            canvas.style.transform = 'translateX(10px)';
+            setTimeout(() => canvas.style.transform = 'translateX(-10px)', 100);
+            setTimeout(() => canvas.style.transform = 'translateX(0)', 200);
+            
+            updateUI();
+        }
+        
+        function updatePlayer() {
+            // Apply movement
+            player.x += player.vx;
+            
+            // Apply gravity
+            if (!player.grounded) {
+                player.vy += 0.8;
+                player.y += player.vy;
+                
+                if (player.y >= 300) {
+                    player.y = 300;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            }
+            
+            // Keep player on screen
+            player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+            
+            // Update timers
+            if (player.attackCooldown > 0) {
+                player.attackCooldown--;
+                if (player.attackCooldown === 0) {
+                    player.state = 'idle';
+                    player.attackCombo = 0;
+                }
+            }
+            
+            if (player.invulnerable > 0) {
+                player.invulnerable--;
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('healthBar').style.width = (player.health / player.maxHealth * 100) + '%';
+            const energyBar = document.getElementById('energyBar');
+            energyBar.style.width = (player.energy / player.maxEnergy * 100) + '%';
+            
+            if (player.energy >= player.maxEnergy) {
+                energyBar.classList.add('pulse');
+            } else {
+                energyBar.classList.remove('pulse');
+            }
+        }
+        
+        function drawPlayer() {
+            ctx.save();
+            
+            // Flicker when invulnerable
+            if (player.invulnerable > 0 && Math.floor(player.invulnerable / 5) % 2) {
+                ctx.globalAlpha = 0.5;
+            }
+            
+            // Player body (blue rectangle)
+            ctx.fillStyle = '#4444ff';
+            ctx.fillRect(player.x - player.width/2, player.y - player.height, player.width, player.height);
+            
+            // Face direction and state indicator
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + (player.facing * 12), player.y - player.height + 10, 10, 10);
+            
+            // Attack visualization
+            if (player.state === 'attacking' || player.state === 'special') {
+                ctx.fillStyle = player.state === 'special' ? '#ffff00' : '#ffaaaa';
+                const range = player.state === 'special' ? 150 : (keys['s'] ? 90 : 70);
+                ctx.fillRect(player.x - range/2, player.y - player.height - 5, range, 5);
+            }
+            
+            ctx.restore();
+        }
+        
+        function drawBackground() {
+            // Hospital corridor background
+            ctx.fillStyle = '#223333';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Floor
+            ctx.fillStyle = '#334444';
+            ctx.fillRect(0, 300, canvas.width, canvas.height - 300);
+            
+            // Hospital tiles pattern
+            ctx.strokeStyle = '#445555';
+            for (let x = 0; x < canvas.width; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 300);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Emergency lighting effect
+            if (Math.floor(Date.now() / 500) % 2) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        function gameLoop() {
+            if (gameState === 'cutscene') {
+                showOpeningCutscene();
+            } else if (gameState === 'playing') {
+                handleInput();
+                updatePlayer();
+                
+                // Update enemies
+                enemies.forEach(enemy => enemy.update());
+                
+                // Update boss
+                if (levelBoss) {
+                    levelBoss.update();
+                    if (levelBoss.health <= 0 && levelBoss) {
+                        levelBoss = null;
+                        setTimeout(() => showLevelCompleteCutscene(), 1000);
+                    }
+                }
+                
+                // Clear and draw
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBackground();
+                
+                // Draw environment objects
+                environmentObjects.forEach(obj => obj.draw());
+                
+                drawPlayer();
+                enemies.forEach(enemy => enemy.draw());
+                
+                // Draw boss
+                if (levelBoss) {
+                    levelBoss.draw();
+                }
+                
+                // Check wave progression
+                if (enemies.length === 0 && !levelBoss && !levelComplete) {
+                    if (currentWave < levelWaves[1].length) {
+                        waveTimer++;
+                        if (waveTimer > 120) { // 2 second delay between waves
+                            startNextWave();
+                            waveTimer = 0;
+                        }
+                    }
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>

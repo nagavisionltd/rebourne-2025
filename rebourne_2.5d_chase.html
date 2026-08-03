@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReBOURNE: Highway Chase — 2.5D Racing</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000; overflow: hidden; color: white;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+        #gameContainer { position: relative; width: 1920px; height: 720px; }
+        #gameCanvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+        /* ── HUD ── */
+        .game-ui {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+            font-family: 'Courier New', monospace; font-size: 13px;
+        }
+        .bar-label { color: #aaa; margin-bottom: 2px; letter-spacing: 1px; }
+        .bar-wrap { width: 220px; height: 18px; border: 2px solid rgba(255,255,255,0.4); background: rgba(0,0,0,0.6); margin-bottom: 8px; }
+        .health-fill { height: 100%; background: linear-gradient(to right, #ff2222, #ff8800); transition: width 0.2s; }
+        .energy-fill { height: 100%; background: linear-gradient(to right, #4444ff, #00ffff); transition: width 0.2s; }
+
+        /* ── BOSS BAR ── */
+        #bossBarWrap {
+            position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+            z-index: 100; text-align: center; display: none; font-family: 'Courier New', monospace;
+        }
+        #bossLabel { font-size: 13px; color: #ff4444; letter-spacing: 3px; margin-bottom: 4px; text-shadow: 0 0 8px #ff4444; }
+        #bossBarOuter { width: 500px; height: 22px; border: 2px solid #ff4444; background: rgba(0,0,0,0.7); position: relative; }
+        #bossBarFill { height: 100%; background: linear-gradient(to right, #ff0000, #ff6600); transition: width 0.15s; }
+        #bossBarShield {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            color: #00ffff; font-size: 11px; letter-spacing: 2px; pointer-events: none;
+        }
+
+        /* ── Zone Announce ── */
+        #zoneAnnounce {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 200; font-family: 'Courier New', monospace; font-size: 32px;
+            color: #fff; letter-spacing: 6px; text-shadow: 0 0 20px #ff6600;
+            opacity: 0; pointer-events: none; text-align: center;
+            transition: opacity 0.4s;
+        }
+
+        .controls {
+            position: absolute; bottom: 10px; left: 10px;
+            font-size: 12px; color: #666; font-family: 'Courier New', monospace;
+        }
+
+        /* ── Title ── */
+        #titleScreen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0a0316 0%, #1b0833 50%, #3c0a4e 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 300; cursor: pointer;
+        }
+        .t-title { font-size: 58px; font-weight: bold; color: #00ffff; letter-spacing: 5px; margin-bottom: 8px; animation: glow 2s infinite alternate; font-family: 'Courier New', monospace; }
+        .t-sub { font-size: 20px; color: #ff6600; letter-spacing: 3px; margin-bottom: 60px; font-family: 'Courier New', monospace; }
+        .t-hint { font-size: 17px; color: #fff; letter-spacing: 3px; animation: blink 1.2s infinite; font-family: 'Courier New', monospace; }
+        @keyframes glow { from { text-shadow: 0 0 20px #00ffff; } to { text-shadow: 0 0 50px #00ffff, 0 0 80px #00bbff; } }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
+
+        /* ── Overlay ── */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); z-index: 400;
+        }
+        #overlayTitle { font-size: 72px; font-weight: bold; font-family: 'Courier New', monospace; margin-bottom: 18px; }
+        #overlaySub { font-size: 20px; color: #aaa; margin-bottom: 40px; font-family: 'Courier New', monospace; }
+        #overlayBtn {
+            padding: 14px 40px; font-size: 17px; background: #ff4444; color: #fff;
+            border: none; cursor: pointer; letter-spacing: 3px; text-transform: uppercase;
+            font-family: 'Courier New', monospace; transition: all 0.2s;
+        }
+        #overlayBtn:hover { background: #ff6666; transform: scale(1.05); }
+
+        #fullscreenBtn {
+            position: absolute; top: 14px; right: 14px; z-index: 100;
+            padding: 8px 13px; background: rgba(0,0,0,0.55); color: #fff;
+            border: 1px solid #666; border-radius: 5px; cursor: pointer; font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="gameContainer">
+
+    <div id="titleScreen">
+        <div class="t-title">HIGHWAY CHASE</div>
+        <div class="t-sub">A ReBOURNE RACING PROTOTYPE</div>
+        <div class="t-hint">CLICK OR PRESS ENTER TO START</div>
+    </div>
+
+    <canvas id="gameCanvas" width="1920" height="720"></canvas>
+    <button id="fullscreenBtn" title="Toggle Fullscreen">📺</button>
+
+    <div class="game-ui">
+        <div class="bar-label">JACK</div>
+        <div class="bar-wrap"><div class="health-fill" id="healthBar" style="width:100%"></div></div>
+        <div class="bar-label">ENERGY</div>
+        <div class="bar-wrap"><div class="energy-fill" id="energyBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Boss Health Bar -->
+    <div id="bossBarWrap">
+        <div id="bossLabel">⚠ POLICE COMMANDER ⚠</div>
+        <div id="bossBarOuter">
+            <div id="bossBarFill" style="width:100%"></div>
+            <div id="bossBarShield"></div>
+        </div>
+    </div>
+
+    <!-- Zone Announce -->
+    <div id="zoneAnnounce"></div>
+
+    <div class="controls">
+        ← → — Lane Dodge &nbsp;|&nbsp; ↑ ↓ — Change Lane &nbsp;|&nbsp; Z — Fire &nbsp;|&nbsp; H — Hitboxes
+    </div>
+
+    <div id="overlay">
+        <div id="overlayTitle">GAME OVER</div>
+        <div id="overlaySub">You were taken out on the highway.</div>
+        <button id="overlayBtn" onclick="restartGame()">TRY AGAIN</button>
+    </div>
+
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+//  CONSTANTS & CANVAS
+// ═══════════════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const ROAD_TOP    = 478;
+const ROAD_BOTTOM = 708;
+const ROAD_MID    = (ROAD_TOP + ROAD_BOTTOM) / 2;
+
+// 3 distinct road Y "lanes" (perspective positions)
+const LANES = [
+    ROAD_TOP    + (ROAD_BOTTOM - ROAD_TOP) * 0.15,   // far lane
+    ROAD_MID,                                          // mid lane
+    ROAD_BOTTOM - (ROAD_BOTTOM - ROAD_TOP) * 0.12,   // near lane
+];
+
+document.getElementById('fullscreenBtn').addEventListener('click', () => {
+    const gc = document.getElementById('gameContainer');
+    if (!document.fullscreenElement) gc.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function getScale(y) {
+    const t = Math.max(0, Math.min(1, (y - ROAD_TOP) / (ROAD_BOTTOM - ROAD_TOP)));
+    return 0.35 + 0.65 * t;
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let gameState  = 'title';
+let lastTime   = 0;
+let gameStarted = false;
+let showDebug  = false;
+
+// Road scrolling
+let roadOffset = 0;
+let cityOffset = 0;
+let distanceTravelled = 0; // 0-1 progress through the run
+
+// Zone system  ── 0=neon city, 1=industrial, 2=desert
+let currentZone = 0;        // integer 0/1/2
+let zoneBlend   = 0;        // 0-1 blend to next zone
+const ZONE_NAMES = ['NEON CITY', 'INDUSTRIAL ZONE', 'DESERT OUTSKIRTS'];
+const TOTAL_ENEMIES = 25;   // used to scale distance
+
+// Spawn
+let spawnTimer     = 1500;
+let enemiesToSpawn = TOTAL_ENEMIES;
+let bossSpawned    = false;
+let killCount      = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════════════════════════
+const keys = {};
+document.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === 'Enter' || e.key === ' ') { if (gameState === 'title') startGame(); }
+    if (e.key.toLowerCase() === 'h') showDebug = !showDebug;
+});
+document.addEventListener('keyup',  e => { keys[e.key.toLowerCase()] = false; });
+document.getElementById('titleScreen').addEventListener('click', startGame);
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ASSETS
+// ═══════════════════════════════════════════════════════════════════════════
+let assets = {};
+let drJackBikeFrames       = [];
+let drJackBikeShoot1Frames = [];
+let drJackBikeShoot2Frames = [];
+let drJackBikeShoot3Frames = [];
+let drJackBikeShoot4Frames = [];
+let drJackHurtFrames       = [];
+let gruntWalkFrames        = [];
+let securityWalkFrames     = [];
+let playerAnimations       = null;
+
+const ASSET_PATHS = [
+    ...Array.from({length:15}, (_,i) => `jack_rebourne_sprites/bike/frame_${String(i).padStart(3,'0')}.png`),
+    'jack_rebourne_sprites/bike_shoot/shot1/frame_001.png','jack_rebourne_sprites/bike_shoot/shot1/frame_002.png','jack_rebourne_sprites/bike_shoot/shot1/frame_003.png',
+    'jack_rebourne_sprites/bike_shoot/shot2/frame_004.png','jack_rebourne_sprites/bike_shoot/shot2/frame_005.png','jack_rebourne_sprites/bike_shoot/shot2/frame_006.png',
+    'jack_rebourne_sprites/bike_shoot/shot3/frame_007.png','jack_rebourne_sprites/bike_shoot/shot3/frame_008.png','jack_rebourne_sprites/bike_shoot/shot3/frame_009.png','jack_rebourne_sprites/bike_shoot/shot3/frame_010.png',
+    'jack_rebourne_sprites/bike_shoot/shot4/frame_011.png','jack_rebourne_sprites/bike_shoot/shot4/frame_012.png','jack_rebourne_sprites/bike_shoot/shot4/frame_013.png','jack_rebourne_sprites/bike_shoot/shot4/frame_014.png',
+    'jack_rebourne_sprites/hurt/frame_001.png','jack_rebourne_sprites/hurt/frame_002.png','jack_rebourne_sprites/hurt/frame_003.png','jack_rebourne_sprites/hurt/frame_004.png','jack_rebourne_sprites/hurt/frame_005.png',
+    ...Array.from({length:7}, (_,i) => `new_enemies/grunt/grunt_walk/frame_00${i}.png`),
+    ...Array.from({length:5}, (_,i) => `new_enemies/security/walk/frame_00${i}.png`),
+];
+
+function preloadImages(paths) {
+    return Promise.allSettled(paths.map(path => new Promise(res => {
+        const img = new Image();
+        img.onload  = () => { assets[path] = img; res(); };
+        img.onerror = () => { console.warn('Missing:', path); res(); };
+        img.src = path;
+    })));
+}
+
+function buildAnimations() {
+    drJackBikeFrames       = Array.from({length:15}, (_,i) => assets[`jack_rebourne_sprites/bike/frame_${String(i).padStart(3,'0')}.png`]).filter(Boolean);
+    drJackBikeShoot1Frames = ['frame_001','frame_002','frame_003'].map(f => assets[`jack_rebourne_sprites/bike_shoot/shot1/${f}.png`]).filter(Boolean);
+    drJackBikeShoot2Frames = ['frame_004','frame_005','frame_006'].map(f => assets[`jack_rebourne_sprites/bike_shoot/shot2/${f}.png`]).filter(Boolean);
+    drJackBikeShoot3Frames = ['frame_007','frame_008','frame_009','frame_010'].map(f => assets[`jack_rebourne_sprites/bike_shoot/shot3/${f}.png`]).filter(Boolean);
+    drJackBikeShoot4Frames = ['frame_011','frame_012','frame_013','frame_014'].map(f => assets[`jack_rebourne_sprites/bike_shoot/shot4/${f}.png`]).filter(Boolean);
+    drJackHurtFrames       = Array.from({length:5}, (_,i) => assets[`jack_rebourne_sprites/hurt/frame_00${i+1}.png`]).filter(Boolean);
+    gruntWalkFrames        = Array.from({length:7}, (_,i) => assets[`new_enemies/grunt/grunt_walk/frame_00${i}.png`]).filter(Boolean);
+    securityWalkFrames     = Array.from({length:5}, (_,i) => assets[`new_enemies/security/walk/frame_00${i}.png`]).filter(Boolean);
+
+    const mk = (sh, rate) => ({ spriteSheet: sh.length ? sh : null, frames: Array.from({length: Math.max(1,sh.length)},(_,i)=>i), frameRate: rate });
+    playerAnimations = {
+        bike:        mk(drJackBikeFrames,       15),
+        bike_shoot1: mk(drJackBikeShoot1Frames, 20),
+        bike_shoot2: mk(drJackBikeShoot2Frames, 20),
+        bike_shoot3: mk(drJackBikeShoot3Frames, 20),
+        bike_shoot4: mk(drJackBikeShoot4Frames, 20),
+        hurt:        mk(drJackHurtFrames,        12),
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════════════════════════════════════
+let particles = [];
+
+class Particle {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type; this.life = 1.0;
+        if (type === 'hit') {
+            this.vx=(Math.random()-.5)*400; this.vy=(Math.random()-.5)*400;
+            this.size=4+Math.random()*4; this.color=`hsl(${Math.random()*60+10},100%,55%)`; this.decay=2.0;
+        } else if (type === 'explosion') {
+            const a=Math.random()*Math.PI*2, sp=80+Math.random()*350;
+            this.vx=Math.cos(a)*sp; this.vy=Math.sin(a)*sp-80;
+            this.size=8+Math.random()*14; this.color=`hsl(${Math.random()*40+10},100%,${50+Math.random()*30}%)`; this.decay=1.1;
+        } else { // spark
+            this.vx=(Math.random()-.5)*600; this.vy=(Math.random()-.5)*600;
+            this.size=2+Math.random()*3; this.color='#ffffff'; this.decay=3.0;
+        }
+    }
+    update(dt) {
+        this.x+=this.vx*dt; this.y+=this.vy*dt;
+        this.vy+=180*dt; this.life-=this.decay*dt; this.size*=0.97;
+    }
+    draw() {
+        ctx.save(); ctx.globalAlpha=Math.max(0,this.life);
+        ctx.shadowBlur=10; ctx.shadowColor=this.color; ctx.fillStyle=this.color;
+        ctx.beginPath(); ctx.arc(this.x,this.y,Math.max(.5,this.size),0,Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+}
+function spawnPfx(x, y, type, n) { for(let i=0;i<n;i++) particles.push(new Particle(x,y,type)); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PLAYER
+// ═══════════════════════════════════════════════════════════════════════════
+let player;
+
+function resetPlayer() {
+    player = {
+        x: 280,
+        y: ROAD_MID,            // actual Y (perspective position)
+        targetLane: 1,          // which LANES[] index we're heading to
+        laneChangeSpeed: 380,   // px/sec for Y movement
+        leanAngle: 0,           // visual lean in radians
+        width: 120, height: 120,
+        health: 100, maxHealth: 100,
+        energy: 0, maxEnergy: 100,
+        facing: 1,
+        state: 'idle',
+        currentAnimation: 'bike',
+        currentFrame: 0,
+        frameTimer: 0,
+        bikeShotType: 0,
+        attackCooldown: 0,
+        invulnerable: 0,
+        laneChangeCooldown: 0,   // prevent instant double-tap
+    };
+}
+
+function handleInput(dt) {
+    if (gameState !== 'playing') return;
+
+    // ── Horizontal dodge (left/right)
+    const speedX = 430;
+    if (keys['arrowleft'])  { player.x -= speedX * dt; player.leanAngle = lerp(player.leanAngle, -0.25, 8*dt); }
+    else if (keys['arrowright']) { player.x += speedX * dt; player.leanAngle = lerp(player.leanAngle, 0.25, 8*dt); }
+    else { player.leanAngle = lerp(player.leanAngle, 0, 6*dt); }
+
+    player.x = Math.max(80, Math.min(W * 0.55, player.x));
+
+    // ── Lane change (up/down) — snap to nearest of 3 lanes
+    if (player.laneChangeCooldown > 0) player.laneChangeCooldown -= dt * 1000;
+
+    if (player.laneChangeCooldown <= 0) {
+        if (keys['arrowup'] && player.targetLane > 0) {
+            player.targetLane--;
+            player.laneChangeCooldown = 280;
+            keys['arrowup'] = false; // consume
+        }
+        if (keys['arrowdown'] && player.targetLane < LANES.length - 1) {
+            player.targetLane++;
+            player.laneChangeCooldown = 280;
+            keys['arrowdown'] = false; // consume
+        }
+    }
+
+    // Smooth Y toward target lane
+    const targetY = LANES[player.targetLane];
+    player.y = lerp(player.y, targetY, Math.min(1, 7 * dt));
+
+    // ── Fire
+    if (keys['z'] && player.attackCooldown <= 0 && player.state !== 'dead') {
+        keys['z'] = false;
+        player.state = 'attacking';
+        player.bikeShotType = (player.bikeShotType % 4) + 1;
+        player.currentAnimation = 'bike_shoot' + player.bikeShotType;
+        player.currentFrame = 0; player.frameTimer = 0;
+        const anim = playerAnimations[player.currentAnimation];
+        player.attackCooldown = (anim.frames.length / 20) * 1000;
+        const sc = getScale(player.y);
+        projectiles.push(new Projectile(player.x + 65*sc, player.y - 28*sc, 1900, 0, 'bike_shot'));
+    }
+}
+
+function updatePlayer(dt) {
+    if (player.health <= 0 && player.state !== 'dead') {
+        player.state = 'dead'; setTimeout(() => showOverlay(false), 1500);
+    }
+    if (player.state === 'dead') return;
+
+    if (player.attackCooldown > 0) {
+        player.attackCooldown -= dt*1000;
+        if (player.attackCooldown <= 0 && player.state === 'attacking') {
+            player.state = 'idle'; player.currentAnimation = 'bike';
+        }
+    }
+    if (player.invulnerable > 0) player.invulnerable -= dt*1000;
+    if (player.state === 'hurt' && player.invulnerable <= 0) {
+        player.state = 'idle'; player.currentAnimation = 'bike';
+    }
+
+    // Animate
+    if (player.state !== 'attacking' && player.state !== 'hurt') player.currentAnimation = 'bike';
+    const anim = playerAnimations[player.currentAnimation] || playerAnimations['bike'];
+    player.frameTimer += dt*1000;
+    const frameDur = 1000 / (anim.frameRate || 15);
+    if (player.frameTimer >= frameDur) {
+        player.frameTimer = 0;
+        const NON_LOOP = ['bike_shoot1','bike_shoot2','bike_shoot3','bike_shoot4','hurt'];
+        if (NON_LOOP.includes(player.currentAnimation)) {
+            if (player.currentFrame < anim.frames.length - 1) player.currentFrame++;
+            else { player.state='idle'; player.currentAnimation='bike'; player.currentFrame=0; }
+        } else {
+            player.currentFrame = (player.currentFrame+1) % anim.frames.length;
+        }
+    }
+}
+
+function drawPlayer() {
+    ctx.save();
+    const sc = getScale(player.y);
+    const w  = player.width  * sc;
+    const h  = player.height * sc;
+
+    // Invulnerability flicker
+    if (player.invulnerable > 0 && Math.floor(Date.now()/80) % 2) ctx.globalAlpha = 0.35;
+
+    // Road vibration + lean
+    const vib = Math.sin(Date.now()/30) * 1.4 * sc;
+    ctx.translate(player.x, player.y + vib);
+    ctx.rotate(player.leanAngle);
+
+    const anim = playerAnimations[player.currentAnimation] || playerAnimations['bike'];
+    const sprite = (anim.spriteSheet && anim.spriteSheet[player.currentFrame]) || null;
+
+    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+        ctx.drawImage(sprite, -w/2, -h, w, h);
+    } else {
+        drawBikeShape(ctx, 0, 0, sc, '#00ffff', '#00cccc');
+    }
+
+    if (showDebug) {
+        ctx.strokeStyle = 'cyan'; ctx.lineWidth = 1;
+        ctx.strokeRect(-w/2, -h, w, h);
+    }
+    ctx.restore();
+}
+
+function drawBikeShape(ctx, x, y, sc, col, glow) {
+    ctx.shadowBlur = 14*sc; ctx.shadowColor = glow;
+    ctx.fillStyle = '#111'; ctx.strokeStyle = col; ctx.lineWidth = 3*sc;
+    [x-32*sc, x+32*sc].forEach(wx => {
+        ctx.beginPath(); ctx.arc(wx, y-12*sc, 14*sc, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+    ctx.beginPath();
+    ctx.moveTo(x-32*sc, y-12*sc); ctx.lineTo(x, y-36*sc);
+    ctx.lineTo(x+32*sc, y-12*sc); ctx.lineTo(x+8*sc, y-44*sc);
+    ctx.lineTo(x-18*sc, y-40*sc); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x-5*sc, y-54*sc, 11*sc, 0, Math.PI*2); ctx.fill();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PROJECTILES
+// ═══════════════════════════════════════════════════════════════════════════
+let projectiles = [];
+
+class Projectile {
+    constructor(x, y, vx, vy, type) {
+        this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.type=type;
+        this.width=42; this.height=7;
+    }
+    update(dt) { this.x+=this.vx*dt; this.y+=this.vy*dt; }
+    draw() {
+        ctx.save();
+        const sc = getScale(this.y);
+        const isP = this.type==='bike_shot';
+        ctx.translate(this.x, this.y); ctx.scale(sc, sc);
+        ctx.shadowBlur=20; ctx.shadowColor = isP?'#00ffff':'#ff3300';
+        ctx.fillStyle='#fff'; ctx.fillRect(-this.width/2,-this.height/2,this.width,this.height);
+        ctx.fillStyle = isP?'rgba(0,255,255,0.5)':'rgba(255,60,0,0.5)';
+        ctx.fillRect(-this.width/2-12,-this.height/2-2,this.width+24,this.height+4);
+        ctx.restore();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ENEMIES
+// ═══════════════════════════════════════════════════════════════════════════
+let enemies = [];
+
+class Enemy {
+    constructor(x, y, type='grunt') {
+        this.x=x; this.y=y; this.type=type;
+        this.width=120; this.height=120;
+        this.health    = type==='grunt'?25:38;
+        this.maxHealth = this.health;
+        this.facing=-1;
+        this.stunned=0; this.hitFlash=0;
+        this.attackCooldown = 1400+Math.random()*1600;
+        this.currentFrame=0; this.frameTimer=0;
+        this.spriteFrames = type==='grunt'?gruntWalkFrames:securityWalkFrames;
+        this.frameRate=10;
+        // Enemy also uses lanes
+        this.targetLane = Math.floor(Math.random()*3);
+        this.laneSwitchTimer = 2000+Math.random()*2000;
+    }
+
+    update(dt) {
+        const sc = getScale(this.y);
+
+        // Lane switching AI
+        this.laneSwitchTimer -= dt*1000;
+        if (this.laneSwitchTimer <= 0) {
+            this.targetLane = Math.floor(Math.random()*3);
+            this.laneSwitchTimer = 1500+Math.random()*2500;
+        }
+        const tY = LANES[this.targetLane];
+        this.y = lerp(this.y, tY, Math.min(1, 4*dt));
+
+        // Drift left toward player
+        const tX = player.x + 340 + Math.sin(Date.now()/600+this.y*.01)*80;
+        this.x = lerp(this.x, tX, Math.min(1, 1.4*dt));
+
+        if (this.stunned>0) { this.stunned-=dt*1000; this.hitFlash-=dt*1000; return; }
+        if (this.hitFlash>0) this.hitFlash-=dt*1000;
+
+        // Shoot
+        if (this.attackCooldown<=0 && player.state!=='dead') {
+            projectiles.push(new Projectile(this.x-50*sc, this.y-22*sc, -950, 0, 'enemy_bike_shot'));
+            this.attackCooldown = 1400+Math.random()*2200;
+        } else {
+            this.attackCooldown-=dt*1000;
+        }
+
+        this.frameTimer+=dt;
+        if (this.frameTimer>=1/this.frameRate) {
+            this.currentFrame=(this.currentFrame+1)%Math.max(1,this.spriteFrames.length);
+            this.frameTimer=0;
+        }
+    }
+
+    takeDamage(dmg) {
+        this.health-=dmg; this.stunned=280; this.hitFlash=110;
+        if (this.health<=0) {
+            player.energy=Math.min(player.maxEnergy, player.energy+8);
+            updateUI(); return true;
+        }
+        return false;
+    }
+
+    draw() {
+        ctx.save();
+        const sc=getScale(this.y), w=this.width*sc, h=this.height*sc;
+
+        // Motorbike body
+        ctx.save();
+        ctx.shadowBlur=10*sc; ctx.shadowColor='#ff3300';
+        ctx.fillStyle='#111'; ctx.strokeStyle='#ff3300'; ctx.lineWidth=3*sc;
+        [this.x-32*sc, this.x+32*sc].forEach(wx=>{
+            ctx.beginPath(); ctx.arc(wx,this.y-12*sc,14*sc,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle='#ff6600'; ctx.beginPath(); ctx.arc(wx,this.y-12*sc,5*sc,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#111';
+        });
+        ctx.beginPath();
+        ctx.moveTo(this.x-32*sc,this.y-12*sc); ctx.lineTo(this.x,this.y-32*sc);
+        ctx.lineTo(this.x+32*sc,this.y-12*sc); ctx.lineTo(this.x+10*sc,this.y-40*sc);
+        ctx.lineTo(this.x-18*sc,this.y-36*sc); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Exhaust flame
+        ctx.fillStyle='rgba(255,100,0,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(this.x+40*sc,this.y-18*sc);
+        ctx.lineTo(this.x+62*sc,this.y-14*sc);
+        ctx.lineTo(this.x+40*sc,this.y-10*sc); ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // Rider sprite
+        const sprite = this.spriteFrames[this.currentFrame];
+        ctx.save();
+        ctx.translate(this.x, this.y-18*sc); ctx.scale(-1,1);
+        if (this.hitFlash>0) ctx.filter='brightness(8)';
+        if (sprite && sprite.complete) {
+            ctx.drawImage(sprite,-w/2,-h,w,h);
+        } else {
+            ctx.fillStyle=this.hitFlash>0?'#fff':'#ff4444';
+            ctx.fillRect(-w/2,-h*.7,w,h*.7);
+        }
+        ctx.restore();
+
+        // HP pip
+        if (this.health < this.maxHealth) {
+            const bw=42*sc, bh=5*sc, bx=this.x-bw/2, by=this.y-h-12*sc;
+            ctx.fillStyle='#222'; ctx.fillRect(bx,by,bw,bh);
+            ctx.fillStyle='#ff3300'; ctx.fillRect(bx,by,bw*(this.health/this.maxHealth),bh);
+        }
+
+        if (Math.random()<0.12) spawnPfx(this.x+60*sc, this.y-14*sc, 'spark', 1);
+        if (showDebug) { ctx.strokeStyle='red'; ctx.lineWidth=1; ctx.strokeRect(this.x-w/2,this.y-h,w,h); }
+        ctx.restore();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  BOSS
+// ═══════════════════════════════════════════════════════════════════════════
+let levelBoss = null;
+
+class PoliceBoss {
+    constructor() {
+        this.x = W + 350; this.y = ROAD_MID;
+        this.width=220; this.height=170;
+        this.health=350; this.maxHealth=350;
+        this.shootCooldown=2000;
+        this.t=0;
+        this.isBlocking=false; this.blockTimer=3800;
+        this.hitFlash=0; this.stunned=0;
+        this.entryDone=false;
+        this.targetLane=1; this.laneSwitchTimer=3000;
+        this.phase=1; // 1=full, 2=<60%, 3=<25%
+    }
+
+    get pct() { return this.health / this.maxHealth; }
+
+    update(dt) {
+        this.t += dt;
+
+        // Phase check
+        const newPhase = this.pct > 0.60 ? 1 : this.pct > 0.25 ? 2 : 3;
+        if (newPhase > this.phase) {
+            this.phase = newPhase;
+            // Rage: speed up attacks
+            this.shootCooldown = Math.max(800, this.shootCooldown * 0.7);
+        }
+
+        // Entry slide-in
+        if (!this.entryDone) {
+            this.x -= 500*dt;
+            if (this.x <= W-300) this.entryDone=true;
+        } else {
+            const tX = W-280 + Math.sin(this.t*0.6)*100;
+            this.x = lerp(this.x, tX, Math.min(1,2*dt));
+        }
+
+        // Lane tracking
+        this.laneSwitchTimer -= dt*1000;
+        if (this.laneSwitchTimer<=0) {
+            this.targetLane = player.targetLane; // chase Jack's lane!
+            this.laneSwitchTimer = 2000+Math.random()*2000;
+        }
+        const tY = LANES[this.targetLane] + Math.sin(this.t*1.2)*15;
+        this.y = lerp(this.y, Math.max(ROAD_TOP+10, Math.min(ROAD_BOTTOM-10, tY)), Math.min(1, 1.8*dt));
+
+        if (this.stunned>0) { this.stunned-=dt*1000; this.hitFlash-=dt*1000; return; }
+        if (this.hitFlash>0) this.hitFlash-=dt*1000;
+
+        // Shield cycle
+        this.blockTimer-=dt*1000;
+        if (this.blockTimer<=0) {
+            this.isBlocking=!this.isBlocking;
+            this.blockTimer=this.isBlocking ? 2000 : 4000;
+            // Phase 3: shorter unblocked windows
+            if (this.phase===3 && !this.isBlocking) this.blockTimer=2200;
+        }
+
+        // Shoot pattern depends on phase
+        this.shootCooldown-=dt*1000;
+        if (this.shootCooldown<=0 && player.state!=='dead') {
+            const sc=getScale(this.y);
+            const ox=this.x-90*sc;
+            if (this.phase===1) {
+                // Triple spread
+                [[-70,-1200,-90],[-48,-1200,0],[-25,-1200,90]].forEach(([yo,vx,vy])=>{
+                    projectiles.push(new Projectile(ox, this.y+yo*sc, vx, vy, 'enemy_bike_shot'));
+                });
+            } else if (this.phase===2) {
+                // 4-shot fan
+                [[-80,-1300,-130],[-55,-1300,-40],[-30,-1300,40],[-5,-1300,130]].forEach(([yo,vx,vy])=>{
+                    projectiles.push(new Projectile(ox, this.y+yo*sc, vx, vy, 'enemy_bike_shot'));
+                });
+            } else {
+                // Phase 3: RAGE — 5-shot rapid
+                [[-90,-1400,-160],[-60,-1400,-70],[-35,-1400,0],[-10,-1400,70],[15,-1400,160]].forEach(([yo,vx,vy])=>{
+                    projectiles.push(new Projectile(ox, this.y+yo*sc, vx, vy, 'enemy_bike_shot'));
+                });
+            }
+            const baseCool = this.phase===1 ? 2200 : this.phase===2 ? 1600 : 1000;
+            this.shootCooldown = baseCool + Math.random()*1000;
+        }
+    }
+
+    takeDamage(dmg) {
+        if (this.isBlocking) {
+            spawnPfx(this.x-100*getScale(this.y), this.y-50*getScale(this.y), 'spark', 8);
+            return false;
+        }
+        this.health = Math.max(0, this.health-dmg);
+        this.stunned=220; this.hitFlash=100;
+        updateBossUI();
+        if (this.health<=0) return true;
+        return false;
+    }
+
+    draw() {
+        ctx.save();
+        const sc=getScale(this.y);
+        if (this.hitFlash>0) ctx.filter='brightness(5)';
+        ctx.translate(0, Math.sin(this.t*18)*1.8*sc);
+
+        // Phase colour: blue → orange → red
+        const phaseCol = this.phase===1?'#0066ff': this.phase===2?'#ff6600':'#ff0000';
+        ctx.shadowBlur=20*sc; ctx.shadowColor=phaseCol;
+
+        // Wheels
+        ctx.fillStyle='#0a0a0f'; ctx.strokeStyle=phaseCol; ctx.lineWidth=5*sc;
+        [this.x+58*sc, this.x-58*sc].forEach(wx=>{
+            ctx.beginPath(); ctx.arc(wx,this.y-28*sc,28*sc,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        });
+
+        // Chassis
+        ctx.fillStyle='#1e272c'; ctx.strokeStyle='#34495e'; ctx.lineWidth=4*sc;
+        ctx.beginPath();
+        ctx.moveTo(this.x-58*sc,this.y-28*sc);
+        ctx.lineTo(this.x-35*sc,this.y-78*sc);
+        ctx.lineTo(this.x+35*sc,this.y-68*sc);
+        ctx.lineTo(this.x+58*sc,this.y-28*sc);
+        ctx.lineTo(this.x+12*sc,this.y-18*sc);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        // Guard plate
+        ctx.fillStyle='#2c3e50'; ctx.fillRect(this.x-78*sc, this.y-96*sc, 32*sc, 65*sc);
+
+        // Siren
+        const isRed = Math.floor(Date.now()/110)%2===0;
+        ctx.shadowColor = isRed?'#ff0000':'#0000ff';
+        ctx.fillStyle   = isRed?'#ff2200':'#0044ff';
+        ctx.beginPath(); ctx.arc(this.x+20*sc,this.y-90*sc,10*sc,0,Math.PI*2); ctx.fill();
+
+        // Phase 3 rage aura
+        if (this.phase===3) {
+            ctx.save();
+            ctx.globalAlpha=0.25+Math.sin(this.t*12)*0.15;
+            ctx.fillStyle='#ff0000';
+            ctx.beginPath(); ctx.arc(this.x-20*sc,this.y-55*sc,70*sc,0,Math.PI*2); ctx.fill();
+            ctx.restore();
+        }
+
+        // Shield
+        if (this.isBlocking) {
+            ctx.save();
+            ctx.shadowColor='#00ffff';
+            ctx.strokeStyle=`rgba(0,255,255,${0.7+Math.sin(this.t*10)*0.2})`;
+            ctx.fillStyle='rgba(0,255,255,0.08)';
+            ctx.lineWidth=4*sc;
+            ctx.beginPath();
+            ctx.arc(this.x-90*sc,this.y-52*sc,58*sc,-Math.PI/2,Math.PI/2,true);
+            ctx.fill(); ctx.stroke();
+            ctx.restore();
+        }
+
+        // Commander helmet
+        ctx.fillStyle='#2c3e50'; ctx.strokeStyle=phaseCol; ctx.lineWidth=2*sc;
+        ctx.beginPath(); ctx.arc(this.x-8*sc,this.y-115*sc,14*sc,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='#00ffff'; ctx.fillRect(this.x-22*sc,this.y-120*sc,14*sc,5*sc);
+
+        ctx.restore();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  COLLISION
+// ═══════════════════════════════════════════════════════════════════════════
+function checkCollisions() {
+    for (let pi=projectiles.length-1; pi>=0; pi--) {
+        const p = projectiles[pi];
+        let hit=false;
+
+        if (p.type==='enemy_bike_shot') {
+            if (player.state!=='dead' && player.invulnerable<=0) {
+                const sc=getScale(player.y);
+                const hw=55*sc, hh=40*sc;
+                if (Math.abs(p.y-player.y)<hh && Math.abs(p.x-player.x)<hw) {
+                    player.health=Math.max(0,player.health-8);
+                    player.invulnerable=500;
+                    if (player.state!=='dead') {
+                        player.state='hurt'; player.currentAnimation='hurt';
+                        player.currentFrame=0; player.frameTimer=0;
+                    }
+                    updateUI(); spawnPfx(player.x,player.y-30,'hit',6); hit=true;
+                }
+            }
+        } else if (p.type==='bike_shot') {
+            // vs enemies
+            for (let ei=enemies.length-1; ei>=0; ei--) {
+                const e=enemies[ei];
+                const sc=getScale(e.y);
+                if (Math.abs(p.y-e.y)<35*sc && Math.abs(p.x-e.x)<55*sc) {
+                    if (e.takeDamage(12)) {
+                        spawnPfx(e.x, e.y-40*sc, 'explosion', 20);
+                        enemies.splice(ei,1);
+                        killCount++;
+                    }
+                    hit=true; break;
+                }
+            }
+            // vs boss — WIDE hitbox so it feels good
+            if (!hit && levelBoss) {
+                const bsc=getScale(levelBoss.y);
+                const bhw=100*bsc, bhh=65*bsc;
+                if (Math.abs(p.y-levelBoss.y)<bhh && Math.abs(p.x-levelBoss.x)<bhw) {
+                    if (levelBoss.takeDamage(12)) {
+                        spawnPfx(levelBoss.x, levelBoss.y-60*bsc, 'explosion', 35);
+                        levelBoss=null;
+                        document.getElementById('bossBarWrap').style.display='none';
+                        setTimeout(()=>showOverlay(true), 900);
+                    }
+                    hit=true;
+                }
+            }
+        }
+
+        if (hit || p.x<-200 || p.x>W+200 || p.y>ROAD_BOTTOM+60) projectiles.splice(pi,1);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  BACKGROUND — 3 progressive zones
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Zone 0: NEON CITY — purple/indigo sky, dense glowing skyline
+function drawZone0(alpha) {
+    ctx.save(); ctx.globalAlpha = alpha;
+
+    // Sky
+    const sg = ctx.createLinearGradient(0,0,0,ROAD_TOP);
+    sg.addColorStop(0,'#0a0316'); sg.addColorStop(0.5,'#1b0833'); sg.addColorStop(1,'#4a0e5e');
+    ctx.fillStyle=sg; ctx.fillRect(0,0,W,ROAD_TOP);
+
+    // Neon city silhouette
+    const cOff = cityOffset%420;
+    const nB = Math.ceil(W/130)+2;
+    for (let i=-1;i<nB;i++) {
+        const bx=i*130-cOff;
+        const bh=110+((Math.abs(i)*31)%17)*10;
+        const bw=72+((Math.abs(i)*7)%5)*13;
+        ctx.fillStyle='#110425'; ctx.fillRect(bx,ROAD_TOP-bh,bw,bh);
+        ctx.fillStyle='rgba(255,255,120,0.25)';
+        for (let wy=ROAD_TOP-bh+15;wy<ROAD_TOP-12;wy+=20) {
+            for (let wx=bx+10;wx<bx+bw-10;wx+=16) {
+                if ((wx+wy+i)%3===0) ctx.fillRect(wx,wy,3,3);
+            }
+        }
+        // Antenna
+        ctx.fillStyle='#ff0040'; ctx.fillRect(bx+bw/2-1,ROAD_TOP-bh-14,2,14);
+        if (Math.floor(Date.now()/500)%2===0) {
+            ctx.beginPath(); ctx.arc(bx+bw/2,ROAD_TOP-bh-14,3,0,Math.PI*2); ctx.fill();
+        }
+    }
+
+    ctx.restore();
+}
+
+// Zone 1: INDUSTRIAL — dark orange sky, factories/silos
+function drawZone1(alpha) {
+    ctx.save(); ctx.globalAlpha = alpha;
+
+    const sg = ctx.createLinearGradient(0,0,0,ROAD_TOP);
+    sg.addColorStop(0,'#0d0800'); sg.addColorStop(0.5,'#2a1000'); sg.addColorStop(1,'#5a2800');
+    ctx.fillStyle=sg; ctx.fillRect(0,0,W,ROAD_TOP);
+
+    // Factory silhouettes — wider, chunkier
+    const cOff2 = (cityOffset*0.7)%520;
+    const nF = Math.ceil(W/180)+2;
+    for (let i=-1;i<nF;i++) {
+        const bx=i*180-cOff2;
+        const bh=80+((Math.abs(i)*23)%13)*11;
+        const bw=100+((Math.abs(i)*11)%6)*15;
+        ctx.fillStyle='#1a0d00'; ctx.fillRect(bx,ROAD_TOP-bh,bw,bh);
+        // Smoke stack
+        ctx.fillStyle='#0f0700';
+        ctx.fillRect(bx+bw*0.6,ROAD_TOP-bh-40,14,40);
+        // Smoke puff
+        if (Math.random()<0.05) spawnPfx(bx+bw*0.6+7, ROAD_TOP-bh-42, 'spark', 1);
+        // Orange glow windows
+        ctx.fillStyle='rgba(255,100,0,0.3)';
+        for (let wy=ROAD_TOP-bh+15;wy<ROAD_TOP-15;wy+=28) {
+            for (let wx=bx+14;wx<bx+bw-14;wx+=22) {
+                if ((wx+wy+i)%4===0) ctx.fillRect(wx,wy,5,5);
+            }
+        }
+    }
+
+    ctx.restore();
+}
+
+// Zone 2: DESERT OUTSKIRTS — blood orange/dusk sky, sparse cacti & rock
+function drawZone2(alpha) {
+    ctx.save(); ctx.globalAlpha = alpha;
+
+    const sg = ctx.createLinearGradient(0,0,0,ROAD_TOP);
+    sg.addColorStop(0,'#1a0500'); sg.addColorStop(0.4,'#7a1e00'); sg.addColorStop(0.85,'#c84000');
+    sg.addColorStop(1,'#ff7700');
+    ctx.fillStyle=sg; ctx.fillRect(0,0,W,ROAD_TOP);
+
+    // Distant dunes (slow)
+    const dOff = (cityOffset*0.3)%600;
+    ctx.fillStyle='#3b1000';
+    for (let i=-1;i<Math.ceil(W/200)+2;i++) {
+        const dx=i*200-dOff;
+        const dh=55+((Math.abs(i)*17)%11)*6;
+        ctx.beginPath();
+        ctx.moveTo(dx,ROAD_TOP);
+        ctx.quadraticCurveTo(dx+100,ROAD_TOP-dh,dx+200,ROAD_TOP);
+        ctx.fill();
+    }
+
+    // Cacti (medium layer)
+    const cOff3 = (cityOffset*0.6)%300;
+    for (let i=-1;i<Math.ceil(W/300)+2;i++) {
+        const cx=i*300-cOff3+80;
+        const ch=55+((Math.abs(i)*13)%8)*7;
+        ctx.fillStyle='#1a3a00';
+        ctx.fillRect(cx-6,ROAD_TOP-ch,12,ch);         // trunk
+        ctx.fillRect(cx-28,ROAD_TOP-ch*.65,22,10);    // left arm
+        ctx.fillRect(cx+6,ROAD_TOP-ch*.5,22,10);      // right arm
+    }
+
+    ctx.restore();
+}
+
+// Road surface — colour shifts by zone
+function drawRoad() {
+    const vanishX = W/2;
+    const rHT=185, rHB=W/2;
+
+    // Road colour blends per zone
+    let roadCol = '#16191c'; // city asphalt
+    if (currentZone===1 || zoneBlend > 0) {
+        const ind='#1c1410'; // industrial dark clay
+        roadCol = blendHex('#16191c', ind, currentZone===1 ? zoneBlend : (currentZone===2?1:0));
+    }
+    if (currentZone===2 || (currentZone===1 && zoneBlend>0)) {
+        const des='#2a1800'; // desert sandy
+        roadCol = blendHex(roadCol, des, currentZone===2 ? zoneBlend : 0);
+    }
+
+    ctx.fillStyle=roadCol;
+    ctx.beginPath();
+    ctx.moveTo(vanishX-rHT,ROAD_TOP); ctx.lineTo(vanishX+rHT,ROAD_TOP);
+    ctx.lineTo(W,ROAD_BOTTOM); ctx.lineTo(0,ROAD_BOTTOM);
+    ctx.closePath(); ctx.fill();
+
+    // Edge glow – colour shifts per zone
+    const edgeCol = currentZone===0?'#ff6600': currentZone===1?'#ff4400':'#cc8800';
+    ctx.save();
+    ctx.shadowBlur=14; ctx.shadowColor=edgeCol; ctx.strokeStyle=edgeCol; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(vanishX-rHT,ROAD_TOP); ctx.lineTo(0,ROAD_BOTTOM); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vanishX+rHT,ROAD_TOP); ctx.lineTo(W,ROAD_BOTTOM); ctx.stroke();
+    ctx.restore();
+
+    // Ground below road
+    const gg=ctx.createLinearGradient(0,ROAD_BOTTOM,0,H);
+    gg.addColorStop(0, currentZone===2?'#3a1800':currentZone===1?'#180800':'#1a1a2e');
+    gg.addColorStop(1, currentZone===2?'#200d00':currentZone===1?'#0d0500':'#0d0d1a');
+    ctx.fillStyle=gg; ctx.fillRect(0,ROAD_BOTTOM,W,H-ROAD_BOTTOM);
+
+    // Lane markers – perspective dashes
+    const lineCol = currentZone===2?'rgba(255,200,100,0.8)':'rgba(255,255,255,0.8)';
+    ctx.save(); ctx.fillStyle=lineCol;
+    const off=(roadOffset%170)/170;
+    for (let i=0;i<10;i++) {
+        const t=(i+off)/10; if(t>1)continue;
+        const y=ROAD_TOP+t*t*(ROAD_BOTTOM-ROAD_TOP);
+        const sc=0.3+0.7*t; const dW=14*sc, dH=23*sc;
+        const hW=rHT+t*(rHB-rHT);
+        ctx.fillRect(vanishX-hW*.33-dW/2, y-dH/2, dW, dH);
+        ctx.fillRect(vanishX+hW*.33-dW/2, y-dH/2, dW, dH);
+    }
+    ctx.restore();
+}
+
+// Simple hex colour blender
+function blendHex(h1, h2, t) {
+    const p=(s,i)=>parseInt(s.slice(i,i+2),16);
+    const r1=p(h1,1),g1=p(h1,3),b1=p(h1,5);
+    const r2=p(h2,1),g2=p(h2,3),b2=p(h2,5);
+    const r=Math.round(r1+(r2-r1)*t).toString(16).padStart(2,'0');
+    const g=Math.round(g1+(g2-g1)*t).toString(16).padStart(2,'0');
+    const b=Math.round(b1+(b2-b1)*t).toString(16).padStart(2,'0');
+    return `#${r}${g}${b}`;
+}
+
+function drawBackground() {
+    // Clear
+    ctx.clearRect(0,0,W,H);
+
+    // Determine which zones to draw and at what alpha based on distanceTravelled
+    // Zone 0: 0-40%, Zone 1: 30-70%, Zone 2: 60-100%
+    const d = distanceTravelled; // 0 to 1
+
+    if (d < 0.4) {
+        drawZone0(1);
+    } else if (d < 0.6) {
+        const t=(d-0.4)/0.2;
+        drawZone0(1-t);
+        drawZone1(t);
+    } else if (d < 0.7) {
+        drawZone1(1);
+    } else if (d < 0.85) {
+        const t=(d-0.7)/0.15;
+        drawZone1(1-t);
+        drawZone2(t);
+    } else {
+        drawZone2(1);
+    }
+
+    // Zone index for colour hints
+    if (d < 0.55) currentZone=0;
+    else if (d < 0.78) currentZone=1;
+    else currentZone=2;
+    zoneBlend = d; // rough proxy
+
+    drawRoad();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════════════════════════
+function drawHUD() {
+    // Kill / target counter
+    const totalKills = TOTAL_ENEMIES - enemiesToSpawn;
+    const prog = Math.min(1, killCount / TOTAL_ENEMIES);
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(W-240,8,225,38);
+    ctx.fillStyle='#00ffff'; ctx.font='14px "Courier New"'; ctx.textAlign='right';
+    if (levelBoss) {
+        ctx.fillText(`⚡ BOSS FIGHT`, W-14, 32);
+    } else if (bossSpawned) {
+        ctx.fillText(`BOSS DEFEATED`, W-14, 32);
+    } else {
+        ctx.fillText(`KILLS: ${killCount} / ${TOTAL_ENEMIES}`, W-14, 32);
+    }
+    ctx.textAlign='left';
+
+    // Lane indicator dots
+    const dotX=16, dotBaseY=90;
+    for (let i=0;i<LANES.length;i++) {
+        ctx.fillStyle = i===player.targetLane ? '#00ffff' : 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.arc(dotX, dotBaseY+i*18, 5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='10px "Courier New"';
+    ctx.fillText('LANE', dotX+10, dotBaseY-8);
+
+    // Zone progress bar
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(W-240, H-36, 225, 20);
+    const zoneCol = currentZone===0?'#aa00ff':currentZone===1?'#ff6600':'#ffaa00';
+    ctx.fillStyle=zoneCol;
+    ctx.fillRect(W-239, H-35, 223*distanceTravelled, 18);
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+    ctx.strokeRect(W-240,H-36,225,20);
+    ctx.fillStyle='#fff'; ctx.font='10px "Courier New"'; ctx.textAlign='right';
+    const zoneName = currentZone===0?'NEON CITY':currentZone===1?'INDUSTRIAL':'DESERT';
+    ctx.fillText(zoneName, W-14, H-21);
+    ctx.textAlign='left';
+
+    // Particles
+    particles.forEach(p=>p.draw());
+}
+
+function updateUI() {
+    document.getElementById('healthBar').style.width = `${player.health/player.maxHealth*100}%`;
+    document.getElementById('energyBar').style.width = `${player.energy/player.maxEnergy*100}%`;
+}
+
+function updateBossUI() {
+    if (!levelBoss) return;
+    document.getElementById('bossBarFill').style.width = `${levelBoss.pct*100}%`;
+    // Change bar colour by phase
+    const col = levelBoss.phase===1?'linear-gradient(to right,#0033cc,#0099ff)':
+                levelBoss.phase===2?'linear-gradient(to right,#cc4400,#ff8800)':
+                'linear-gradient(to right,#cc0000,#ff2200)';
+    document.getElementById('bossBarFill').style.background = col;
+    document.getElementById('bossBarShield').textContent = levelBoss.isBlocking ? '🛡 SHIELD ACTIVE' : '';
+    document.getElementById('bossLabel').textContent =
+        levelBoss.phase===1? '⚠ POLICE COMMANDER ⚠':
+        levelBoss.phase===2? '🔥 POLICE COMMANDER — PHASE 2 🔥':
+        '💀 POLICE COMMANDER — FINAL PHASE 💀';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ZONE ANNOUNCE
+// ═══════════════════════════════════════════════════════════════════════════
+let lastAnnouncedZone = -1;
+
+function checkZoneAnnounce() {
+    if (currentZone !== lastAnnouncedZone) {
+        lastAnnouncedZone = currentZone;
+        const el = document.getElementById('zoneAnnounce');
+        el.textContent = `— ${ZONE_NAMES[currentZone]} —`;
+        el.style.opacity = '1';
+        setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  OVERLAY
+// ═══════════════════════════════════════════════════════════════════════════
+function showOverlay(win) {
+    document.getElementById('overlayTitle').textContent = win?'MISSION CLEAR':'GAME OVER';
+    document.getElementById('overlayTitle').style.color = win?'#00ffff':'#ff4444';
+    document.getElementById('overlaySub').textContent   = win?'You took down the Police Commander!':'You were taken out on the highway.';
+    document.getElementById('overlayBtn').textContent   = win?'PLAY AGAIN':'TRY AGAIN';
+    document.getElementById('overlay').style.display='flex';
+    gameState = win?'win':'dead';
+}
+
+function restartGame() {
+    document.getElementById('overlay').style.display='none';
+    document.getElementById('bossBarWrap').style.display='none';
+    initLevel();
+    gameState='playing';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════════
+function initLevel() {
+    enemies=[]; projectiles=[]; particles=[];
+    levelBoss=null; bossSpawned=false;
+    enemiesToSpawn=TOTAL_ENEMIES; spawnTimer=1500;
+    roadOffset=0; cityOffset=0; distanceTravelled=0;
+    killCount=0; currentZone=0; zoneBlend=0; lastAnnouncedZone=-1;
+    resetPlayer(); updateUI();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GAME LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+function gameLoop(currentTime) {
+    const dt = Math.min((currentTime - lastTime)/1000, 0.05);
+    lastTime = currentTime;
+
+    if (gameState === 'playing') {
+        // Scroll
+        roadOffset += 1500*dt;
+        cityOffset +=   60*dt;
+
+        // Distance progress: advances with kills, maxes near boss trigger
+        distanceTravelled = Math.min(0.97, killCount / (TOTAL_ENEMIES * 0.98));
+        if (bossSpawned) distanceTravelled = Math.min(1.0, distanceTravelled + dt*0.04);
+
+        handleInput(dt);
+        updatePlayer(dt);
+
+        // Spawn enemies
+        if (enemiesToSpawn > 0 && !bossSpawned) {
+            spawnTimer -= dt*1000;
+            if (spawnTimer<=0) {
+                const lane = Math.floor(Math.random()*3);
+                const type = Math.random()>0.5?'grunt':'security';
+                enemies.push(new Enemy(W+140, LANES[lane], type));
+                enemiesToSpawn--;
+                spawnTimer = 1000+Math.random()*1400;
+            }
+        }
+
+        // Spawn boss
+        if (enemiesToSpawn<=0 && enemies.length===0 && !levelBoss && !bossSpawned) {
+            bossSpawned=true;
+            levelBoss=new PoliceBoss();
+            document.getElementById('bossBarWrap').style.display='block';
+            updateBossUI();
+        }
+
+        enemies.forEach(e=>e.update(dt));
+        if (levelBoss) { levelBoss.update(dt); updateBossUI(); }
+
+        // Particles
+        for (let i=particles.length-1;i>=0;i--) {
+            particles[i].update(dt);
+            if (particles[i].life<=0) particles.splice(i,1);
+        }
+
+        checkCollisions();
+
+        // Cull off-screen enemies
+        enemies = enemies.filter(e=>e.x>-250);
+
+        // Check zone announce
+        checkZoneAnnounce();
+
+        // ── RENDER ──
+        drawBackground();
+
+        // Depth sort
+        const draw = [];
+        draw.push({y:player.y, fn:drawPlayer});
+        enemies.forEach(e=>draw.push({y:e.y, fn:()=>e.draw()}));
+        if (levelBoss) draw.push({y:levelBoss.y, fn:()=>levelBoss.draw()});
+        projectiles.forEach(p=>draw.push({y:p.y, fn:()=>p.draw()}));
+        draw.sort((a,b)=>a.y-b.y);
+        draw.forEach(d=>d.fn());
+
+        drawHUD();
+
+    } else if (gameState==='dead' || gameState==='win') {
+        drawBackground();
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════════════════════════
+function startGame() {
+    if (gameStarted) return;
+    gameStarted = true;
+    document.getElementById('titleScreen').style.display='none';
+    preloadImages(ASSET_PATHS).then(()=>{
+        buildAnimations();
+        initLevel();
+        gameState='playing';
+    });
+}
+
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
