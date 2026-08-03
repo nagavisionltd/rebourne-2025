@@ -2902,7 +2902,8 @@
                     }
                 });
 
-                enemies.forEach(e => e.update(deltaTime));
+                enemies.forEach(e => e.update(deltaTime))
+                updateParticles(deltaTime);;
                 if (levelBoss) levelBoss.update(deltaTime);
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2913,7 +2914,8 @@
                 else if (currentLevel === 5) drawLevel6Background();  // Was level 6
                 
                 // Standard flat rendering for all levels
-                projectiles.forEach(p => p.draw());
+                projectiles.forEach(p => p.draw())
+                drawParticles();;
                 // Update and filter environment objects (obstacles)
                 environmentObjects = environmentObjects.filter(obj => {
                     const result = obj.update(deltaTime);
