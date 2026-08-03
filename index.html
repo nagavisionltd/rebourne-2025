@@ -1003,9 +1003,12 @@
 
                 const distToPlayer = this.x - player.x;
                 const attackRange = this.type === 'heavy' ? 70 : 60;
-                const followRange = 400;
+                const followRange = 500;
 
                 if (Math.abs(distToPlayer) > followRange) { 
+                    // Walk toward player from far away
+                    this.x += (distToPlayer > 0 ? -1 : 1) * this.speed * 0.5 * deltaTime;
+                    this.facing = distToPlayer > 0 ? -1 : 1;
                     this.currentAnimation = 'walk'; 
                 } 
                 else if (Math.abs(distToPlayer) > attackRange) {
