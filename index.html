@@ -1217,9 +1217,46 @@
                 this.width = 90; this.height = 120; this.health = 150; this.maxHealth = 150;
             }
             draw() {
-                ctx.fillStyle = '#444488'; // Changed from red (#880000) to blue
+                ctx.save();
+                
+                // Body
+                const gradient = ctx.createLinearGradient(this.x - this.width/2, this.y - this.height, this.x + this.width/2, this.y);
+                gradient.addColorStop(0, '#2a2a6a');
+                gradient.addColorStop(0.5, '#4444aa');
+                gradient.addColorStop(1, '#6666cc');
+                ctx.fillStyle = gradient;
                 ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
-                this.drawHealthBar('Blue Grunt Boss'); // Changed label
+                
+                // Armor plates
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(this.x - this.width/2 + 10, this.y - this.height + 15 + i * 20, this.width - 20, 8);
+                }
+                
+                // Core glow
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#6688ff';
+                ctx.fillStyle = 'rgba(100, 136, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - this.height/2, this.width/3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#00ffff';
+                ctx.beginPath();
+                ctx.arc(this.x - 15, this.y - this.height/2 - 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 15, this.y - this.height/2 - 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (this.hitFlash > 0) {
+                    ctx.filter = 'brightness(3)';
+                }
+                
+                ctx.restore();
+                this.drawHealthBar('Warden Vex');
             }
             drawHealthBar(name) {
                 ctx.fillStyle = '#333';
@@ -1420,9 +1457,53 @@
                 }
             }
             draw() {
-                ctx.fillStyle = '#333333';
+                ctx.save();
+                
+                // Cloak
+                const gradient = ctx.createLinearGradient(this.x - this.width/2, this.y - this.height, this.x + this.width/2, this.y);
+                gradient.addColorStop(0, '#1a0a1a');
+                gradient.addColorStop(0.5, '#2a0a2a');
+                gradient.addColorStop(1, '#1a0a1a');
+                ctx.fillStyle = gradient;
                 ctx.fillRect(this.x - this.width/2, this.y - this.height, this.width, this.height);
-                this.drawHealthBar('Assassin');
+                
+                // Armor accents
+                ctx.fillStyle = '#cc0044';
+                ctx.fillRect(this.x - this.width/2 + 5, this.y - this.height + 10, this.width - 10, 5);
+                ctx.fillRect(this.x - this.width/2 + 5, this.y - this.height + this.height - 15, this.width - 10, 5);
+                
+                // Visor glow
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff0066';
+                ctx.fillStyle = 'rgba(255, 0, 102, 0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - this.height/2 - 5, this.width/2.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Energy blades on forearms
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff0066';
+                ctx.fillStyle = '#ff3366';
+                ctx.fillRect(this.x - this.width/2 - 8, this.y - this.height/2, 6, 30);
+                ctx.fillRect(this.x + this.width/2 + 2, this.y - this.height/2, 6, 30);
+                
+                // Tattered cloak bottom
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#1a0a1a';
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - this.width/2 + i * 18, this.y);
+                    ctx.lineTo(this.x - this.width/2 + i * 18 + 10, this.y + 15);
+                    ctx.lineTo(this.x - this.width/2 + i * 18 + 18, this.y);
+                    ctx.fill();
+                }
+                
+                if (this.hitFlash > 0) {
+                    ctx.filter = 'brightness(3)';
+                }
+                
+                ctx.restore();
+                this.drawHealthBar('Keres the Silent');
             }
         }
 
@@ -1950,8 +2031,8 @@
                 if (currentLevel === 1) levelBoss = new Boss(1680, currentGroundLevel);
                 else if (currentLevel === 2) levelBoss = new AssassinBoss(1680, currentGroundLevel);
                 else if (currentLevel === 3) levelBoss = new HandlerBoss(1680, currentGroundLevel);  // Was level 4
-                else if (currentLevel === 4) { /* PoliceBoss handled above */ }  // Was level 5
-                else if (currentLevel === 5) showLevelCompleteCutscene();  // Was level 6
+                else if (currentLevel === 4) levelBoss = new PoliceBoss(1680, 600);  // Bike chase boss
+                else if (currentLevel === 5) levelBoss = new HandlerBoss(1680, currentGroundLevel);  // Final boss
             }
             if (levelBoss && levelBoss.health <= 0) {
                 levelBoss = null;
@@ -2227,6 +2308,8 @@
         function performSpecialMove() {
             player.state = 'special'; player.attackCooldown = 3000; player.energy = 0; player.invulnerable = 3000;
             createParticles(player.x, player.y - player.height/2, 'special', 30);
+            // Screen flash effect
+            player.specialFlash = 300;  // Flash duration in ms
             
             let primaryTarget = null; let closestDist = 150;
             [...enemies, levelBoss].filter(e => e).forEach(enemy => {
@@ -2803,6 +2886,13 @@
                 enemies.forEach(e => e.draw());
                 if (levelBoss) levelBoss.draw();
                 drawPlayer();
+                
+                // Special attack screen flash
+                if (player.specialFlash > 0) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(0.6, player.specialFlash / 300)})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    player.specialFlash -= deltaTime * 1000;
+                }
                 
                 checkLevelCompletion();
             }
