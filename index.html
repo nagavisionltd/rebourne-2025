@@ -515,6 +515,7 @@
         const GRAVITY = 2400;
 
 
+        const laneYPositions = [500, 580, 660]; // Lane Y positions for Level 5
         let player = null;
         
         let showDebugHitboxes = false;
@@ -815,12 +816,14 @@
             }
 
             update(deltaTime) {
-                // Move obstacles leftward (negative x direction)
-                this.x -= this.speed * deltaTime;
-                
-                // Remove obstacles that go off-screen left
-                if (this.x + this.width < 0) {
-                    return 'remove'; // Signal to remove this object
+                // Only move obstacles in Level 5 (highway chase)
+                if (currentLevel === 5) {
+                    this.x -= this.speed * deltaTime;
+                    
+                    // Remove obstacles that go off-screen left
+                    if (this.x + this.width < 0) {
+                        return 'remove'; // Signal to remove this object
+                    }
                 }
                 return null; // Keep object
             }
@@ -1839,6 +1842,7 @@
         
         
         function initLevel1() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 1; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -1852,6 +1856,7 @@
         }
 
         function initLevel2() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 2; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 620; // Lower floor for the rooftop/factory image
@@ -1867,6 +1872,7 @@
         }
 
         function initLevel3() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 3; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -1885,6 +1891,7 @@
         }
 
         function initLevel4() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 4; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -1899,6 +1906,7 @@
         }
 
         function initLevel5() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 5; 
             player.x = 200; 
@@ -1925,6 +1933,7 @@
         }
         
         function initLevel6() {
+            backgroundElements = [];
             stopAllMusic();
             currentLevel = 6; player.x = 100; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -2717,9 +2726,7 @@
 
                     // Spawn obstacles in random lanes
                     level5ObstacleSpawnTimer -= deltaTime * 1000;
-                    if (level5ObstacleSpawnTimer <= 0) {
-                        const laneYPositions = [500, 580, 660];
-                        const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length)];
+                    if (level5ObstacleSpawnTimer <= 0) {                        const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length)];
                         // Spawn different types of obstacles
                         const obstacleTypes = ['barrel', 'roadblock', 'spikes'];
                         const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
