@@ -621,13 +621,43 @@
             draw() {
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.fill();
+                
+                if (this.type === 'hit') {
+                    // Orange burst - larger and more intense
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ff8800';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Inner bright core
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#ffff00';
+                    ctx.fillStyle = '#fff800';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'spark') {
+                    // White sparks with blue glow
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Default for explosion, special, etc.
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.fill();
+                }
                 ctx.restore();
             }
         }
@@ -1917,7 +1947,11 @@
                 else if (currentLevel === 2) initLevel3();
                 else if (currentLevel === 3) initLevel4();
                 else if (currentLevel === 4) initLevel5();
-                else if (currentLevel === 5) initLevel6();
+                else if (currentLevel === 5) {
+                    // Final level complete - show ending
+                    gameState = 'ending';
+                    cutsceneTimer = 8000; // 8 seconds for ending
+                }
                 else {
                      gameState = 'title';
                      document.getElementById('titleScreen').style.display = 'flex';
