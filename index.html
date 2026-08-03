@@ -316,32 +316,43 @@
             }
         });
 
-        function preloadImages(imagePaths) {
-            const promises = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
-        ];
-            const loadedImages = {};
+        function preloadAssets(imagePaths) {
+            const imagePromises = [];
+            const audioPromises = [];
+            const loadedAssets = {};
 
             imagePaths.forEach(path => {
-                const img = new Image();
-                loadedImages[path] = img; // Store the image object
-                const promise = new Promise((resolve, reject) => {
-                    img.onload = () => resolve();
-                    img.onerror = () => {
-                        console.error(`CRITICAL IMAGE LOAD ERROR: Failed to load image: ${path}`);
-                        reject(new Error(`Failed to load image: ${path}`));
-                    };
-                });
-                img.src = path;
-                promises.push(promise);
+                if (path.endsWith('.mp3') || path.endsWith('.ogg') || path.endsWith('.wav')) {
+                    // Load as audio
+                    const audio = new Audio();
+                    loadedAssets[path] = audio;
+                    const promise = new Promise((resolve, reject) => {
+                        audio.oncanplaythrough = () => resolve();
+                        audio.onerror = () => {
+                            console.error(`CRITICAL AUDIO LOAD ERROR: Failed to load audio: ${path}`);
+                            reject(new Error(`Failed to load audio: ${path}`));
+                        };
+                    });
+                    audio.src = path;
+                    audio.load();
+                    audioPromises.push(promise);
+                } else {
+                    // Load as image
+                    const img = new Image();
+                    loadedAssets[path] = img;
+                    const promise = new Promise((resolve, reject) => {
+                        img.onload = () => resolve();
+                        img.onerror = () => {
+                            console.error(`CRITICAL IMAGE LOAD ERROR: Failed to load image: ${path}`);
+                            reject(new Error(`Failed to load image: ${path}`));
+                        };
+                    });
+                    img.src = path;
+                    imagePromises.push(promise);
+                }
             });
 
-            return Promise.all(promises).then(() => loadedImages);
+            return Promise.all([...imagePromises, ...audioPromises]).then(() => loadedAssets);
         }
 
         let level1BackgroundImage;
@@ -1971,7 +1982,7 @@
             startScreenMusic.currentTime = 0;
 
             // Preload all images
-            preloadImages(allImagePaths)
+            preloadAssets(allImagePaths)
                 .then(assets => {
                     gameAssets = assets; // Store loaded assets globally
                     level1BackgroundImage = gameAssets['images/level_1_background.gif',
