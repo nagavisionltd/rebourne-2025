@@ -969,6 +969,10 @@
                     } else {
                         this.attackCooldown -= deltaTime * 1000;
                     }
+                    // Exhaust sparks
+                    if (Math.random() < 0.2) {
+                        createParticles(this.x - 50 * this.facing * scale, this.y - 14 * scale, 'spark', 1);
+                    }
                     
                     this.currentAnimation = 'walk';
                     this.frameTimer += deltaTime;
@@ -1047,9 +1051,9 @@
                 this.stunned = 300;
                 this.hitFlash = 100; // Flash for 100ms
                 
-                // Hit particles
-                createParticles(this.x, this.y - this.height/2, 'hit', 10);
-                createParticles(this.x, this.y - this.height/2, 'spark', 5);
+                // Hit particles - enhanced
+                createParticles(this.x, this.y - this.height/2, 'hit', 12);
+                createParticles(this.x, this.y - this.height/2, 'spark', 6);
                 
                 // Knockback physics
                 this.vx = player.facing * 200;
@@ -1057,6 +1061,7 @@
 
                 if (this.health <= 0) {
                     player.energy = Math.min(player.maxEnergy, player.energy + 10);
+                    createParticles(this.x, this.y - this.height/2, 'explosion', 40);
                     return true;
                 }
                 return false;
@@ -2405,7 +2410,8 @@
                         
                         if (enemy.takeDamage(damage) && enemy !== levelBoss) enemies.splice(enemies.indexOf(enemy), 1);
                         player.energy = Math.min(player.maxEnergy, player.energy + 3);
-                        createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 5);
+                        createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 8);
+                        createParticles(enemy.x, enemy.y - enemy.height/2, 'spark', 5);
                         hitSomething = true;
                     }
                 });
@@ -2736,9 +2742,12 @@
                                         } else {
                                             enemies.splice(enemies.indexOf(enemy), 1);
                                         }
-                                        createParticles(enemy.x, enemy.y - 30 * getEntityScale(enemy.y), 'explosion', 15);
+                                        createParticles(enemy.x, enemy.y - 30 * getEntityScale(enemy.y), 'explosion', 25);
                                     }
                                     hit = true;
+                                    // Hit particles on impact
+                                    createParticles(p.x, p.y, 'hit', 8);
+                                    createParticles(p.x, p.y, 'spark', 5);
                                 }
                             });
                         }
@@ -2747,11 +2756,16 @@
                         if (p.type === 'knife' && Math.abs(p.x - player.x) < 20 && Math.abs(p.y - (player.y - player.height/2)) < player.height/2) {
                             player.health = Math.max(0, player.health - 10);
                             player.invulnerable = 500; updateUI(); hit = true;
+                            createParticles(player.x, player.y - player.height/2, 'hit', 8);
+                            createParticles(player.x, player.y - player.height/2, 'spark', 5);
                         } else {
                              [...enemies, levelBoss].filter(e => e).forEach((enemy, eIndex) => {
                                 if (Math.abs(p.x - enemy.x) < (p.width + enemy.width) / 2) {
                                     if (enemy.takeDamage(10) && enemy !== levelBoss) enemies.splice(eIndex, 1);
                                     hit = true;
+                                    // Hit particles on impact
+                                    createParticles(enemy.x, enemy.y - enemy.height/2, 'hit', 8);
+                                    createParticles(enemy.x, enemy.y - enemy.height/2, 'spark', 5);
                                 }
                             });
                         }
@@ -2763,6 +2777,7 @@
                 environmentObjects.forEach(obj => {
                     if(obj.type === 'laser' && obj.active && Math.abs(player.x - (obj.x + obj.width/2)) < player.width/2) {
                         player.health = 0; updateUI(); // Instant death
+                        createParticles(player.x, player.y - player.height/2, 'explosion', 30);
                     }
                 });
 
