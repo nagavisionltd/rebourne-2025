@@ -372,61 +372,26 @@
 
         // Margery Animation Frames
         let margeryIdleLeftFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let margeryIdleRightFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let margeryJumpLeftFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let margeryJumpRightFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let margeryRunLeftFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let margeryRunRightFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         let cutsceneImages = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         const margeryAnimations = {
@@ -492,26 +457,40 @@
             'images/margery_limited (1)/margery_run left_0.png', 'images/margery_limited (1)/margery_run left_1.png', 'images/margery_limited (1)/margery_run left_2.png', 'images/margery_limited (1)/margery_run left_3.png', 'images/margery_limited (1)/margery_run left_4.png', 'images/margery_limited (1)/margery_run left_5.png',
             'images/margery_limited (1)/margery_run right_0.png', 'images/margery_limited (1)/margery_run right_1.png', 'images/margery_limited (1)/margery_run right_2.png', 'images/margery_limited (1)/margery_run right_3.png', 'images/margery_limited (1)/margery_run right_4.png', 'images/margery_limited (1)/margery_run right_5.png'
         ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         
         let currentLevel = 0;
-        const startScreenMusic = new Audio('Music/Pixelated Groove Machine.mp3');
+        const startScreenMusic = new Audio('Music/pixelated groove machine.mp3');
         startScreenMusic.loop = true;
-        startScreenMusic.volume = 0.5; // Adjust volume as needed
+        startScreenMusic.volume = 0.5;
 
-        const level1Music = new Audio('Music/Neon Strut.mp3');
+        const level1Music = new Audio('Music/neon strut.mp3');
         level1Music.loop = true;
-        level1Music.volume = 0.5; // Adjust volume as needed
+        level1Music.volume = 0.5;
 
         const level2Music = new Audio('Music/cyberpunk-street.mp3');
         level2Music.loop = true;
-        level2Music.volume = 0.5; // Adjust volume as needed
+        level2Music.volume = 0.5;
+
+        // Additional music tracks
+        const level3Music = new Audio('Music/neon nights.mp3');
+        level3Music.loop = true;
+        level3Music.volume = 0.5;
+
+        const level4Music = new Audio('Music/neon strut.mp3');
+        level4Music.loop = true;
+        level4Music.volume = 0.5;
+
+        const level5Music = new Audio('Music/pixelated groove machine.mp3');
+        level5Music.loop = true;
+        level5Music.volume = 0.5;
+
+        const ambientMusic1 = new Audio('Music/shadows and smoke - rock rnb.mp3');
+        ambientMusic1.loop = true;
+        ambientMusic1.volume = 0.3;
+
+        // Note: Waiting_at_the_Gate.mp3 and The_Unseen_Cathedral.mp3 not in Music/ folder
 
         // Function to play start screen music
         function playStartScreenMusic() {
@@ -532,8 +511,30 @@
             level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
         }
 
+        // Function to play level 3 music
+        function playLevel3Music() {
+            level2Music.pause();
+            level2Music.currentTime = 0;
+            level3Music.play().catch(e => console.error("Error playing level 3 music:", e));
+        }
+
+        // Function to play level 4 music
+        function playLevel4Music() {
+            level3Music.pause();
+            level3Music.currentTime = 0;
+            level4Music.play().catch(e => console.error("Error playing level 4 music:", e));
+        }
+
+        // Function to play level 5 music
+        function playLevel5Music() {
+            level4Music.pause();
+            level4Music.currentTime = 0;
+            level5Music.play().catch(e => console.error("Error playing level 5 music:", e));
+            ambientMusic1.play().catch(e => console.error("Error playing ambient music:", e));
+        }
+
         function stopAllMusic() {
-            [startScreenMusic, level1Music, level2Music].forEach(m => {
+            [startScreenMusic, level1Music, level2Music, level3Music, level4Music, level5Music, ambientMusic1].forEach(m => {
                 m.pause();
                 m.currentTime = 0;
             });
@@ -543,206 +544,81 @@
 
         // Jack Rebourne Frame Arrays
         let drJackIdleFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackRunFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJumpUpFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJumpAirFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJumpLandFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJabFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackPunchFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackRightKickFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackUppercutFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackLeftKickFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJumpAttack1Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackJumpAttack2Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackBikeFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackBikeShoot1Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackBikeShoot2Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackBikeShoot3Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackBikeShoot4Frames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackHurtFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let drJackDeathFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         // Enemy Frame Arrays
         let gruntWalkFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let gruntPunchFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let gruntKickFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let securityWalkFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let securityPunchFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let securityBatFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         let gameState = 'title';
@@ -761,12 +637,7 @@
 
 
         const laneYPositions = [500, 580, 660,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; // Lane Y positions for Level 5
         let player = null;
         
@@ -827,46 +698,21 @@
         }
         
         let enemies = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let levelBoss = null;
         let environmentObjects = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let npc = null;
         let backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
         let particles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         class Particle {
@@ -1048,12 +894,7 @@
                 // Update animation frame
                 this.frameTimer += deltaTime;
                 const animation = margeryAnimations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (this.frameTimer >= 1 / animation.frameRate) {
                     this.currentFrame = (this.currentFrame + 1) % animation.frames.length;
@@ -1063,20 +904,10 @@
             draw() {
                 ctx.save();
                 const animation = margeryAnimations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 const currentSprite = animation.spriteSheet[this.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
                     // Draw the sprite
@@ -1327,12 +1158,7 @@
                     this.currentAnimation = 'walk';
                     this.frameTimer += deltaTime;
                     const anim = this.animations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     if (this.frameTimer >= 1 / anim.frameRate) {
                         this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
@@ -1386,12 +1212,7 @@
                 // Update animation frame
                 this.frameTimer += deltaTime;
                 const anim = this.animations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (this.frameTimer >= 1 / anim.frameRate) {
                     this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
@@ -1514,20 +1335,10 @@
                         ctx.translate(this.x + 5 * scale, this.y - 18 * scale);
                         if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
                         const anim = this.animations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         const currentSprite = anim.spriteSheet[this.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         if (currentSprite && currentSprite.complete) {
                             ctx.drawImage(currentSprite, -w/2, -h, w, h);
@@ -1540,20 +1351,10 @@
                         ctx.scale(-1, 1);
                         if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
                         const anim = this.animations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         const currentSprite = anim.spriteSheet[this.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         if (currentSprite && currentSprite.complete) {
                             ctx.drawImage(currentSprite, -w/2, -h, w, h);
@@ -1570,20 +1371,10 @@
                     }
                 } else {
                     const anim = this.animations[this.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     const currentSprite = anim.spriteSheet[this.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     if (currentSprite && currentSprite.complete) {
                         if (this.facing === -1) {
@@ -1986,46 +1777,21 @@
                 .then(assets => {
                     gameAssets = assets; // Store loaded assets globally
                     level1BackgroundImage = gameAssets['images/level_1_background.gif',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     level2RooftopBackgroundImage = gameAssets['images/google_ai_studio_2025-09-01t15_32_37.197z.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                                         level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     level5TruckBackgroundImage = gameAssets['images/level_2_truck.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     // Jack Rebourne Assets
                     drJackIdleFrames[0] = gameAssets['jack_rebourne_sprites/idle_jack.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     
                     drJackRunFrames = [
@@ -2035,137 +1801,77 @@
                         gameAssets['jack_rebourne_sprites/run/frame_006.png'], gameAssets['jack_rebourne_sprites/run/frame_007.png'],
                         gameAssets['jack_rebourne_sprites/run/frame_008.png'], gameAssets['jack_rebourne_sprites/run/frame_009.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     drJackJumpUpFrames = [
                         gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_0.png'], 
                         gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_01png.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackJumpAirFrames = [
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_02_air.png'],
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_03_air.png'],
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_04_air.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackJumpLandFrames = [
                         gameAssets['jack_rebourne_sprites/jump/3.land/frame_05_land.png'],
                         gameAssets['jack_rebourne_sprites/jump/3.land/frame_06_land.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     drJackJabFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_001.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_003.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_004.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackPunchFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_002.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackRightKickFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_003.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackUppercutFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_01.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_02.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_03.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackLeftKickFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_002.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     drJackJumpAttack1Frames = [
                         gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_000.png'],
                         gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_001.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackJumpAttack2Frames = [
                         gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_003.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     drJackBikeFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     for(let i=0; i<15; i++) {
                         let num = i.toString().padStart(3, '0');
@@ -2177,46 +1883,26 @@
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_003.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackBikeShoot2Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_004.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_005.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_006.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackBikeShoot3Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_007.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_008.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_009.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_010.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackBikeShoot4Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_011.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_012.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_013.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_014.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     drJackHurtFrames = [
@@ -2224,33 +1910,18 @@
                         gameAssets['jack_rebourne_sprites/hurt/frame_003.png'], gameAssets['jack_rebourne_sprites/hurt/frame_004.png'],
                         gameAssets['jack_rebourne_sprites/hurt/frame_005.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     drJackDeathFrames = [
                         gameAssets['jack_rebourne_sprites/hurt/frame_006_fall.png'],
                         gameAssets['jack_rebourne_sprites/hurt/frame_010_death.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     // Enemy Assets
                     gruntWalkFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     for(let i=0; i<7; i++) gruntWalkFrames.push(gameAssets[`new_enemies/grunt/grunt_walk/frame_00${i}.png`]);
                     
@@ -2259,33 +1930,18 @@
                         gameAssets['new_enemies/grunt/grunt_attack/punch/frame_001.png'],
                         gameAssets['new_enemies/grunt/grunt_attack/punch/frame_002.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     gruntKickFrames = [
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_000.png'],
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_003.png'],
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_004.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     securityWalkFrames = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     for(let i=0; i<5; i++) securityWalkFrames.push(gameAssets[`new_enemies/security/walk/frame_00${i}.png`]);
 
@@ -2294,23 +1950,13 @@
                         gameAssets['new_enemies/security/attack_punch/frame_007.png'],
                         gameAssets['new_enemies/security/attack_punch/frame_008.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     securityBatFrames = [
                         gameAssets['new_enemies/security/attack_bat/frame_005.png'],
                         gameAssets['new_enemies/security/attack_bat/frame_006.png']
                     ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
         // Define animations with variable frame durations (ms) and frame-specific hitboxes
@@ -2380,173 +2026,68 @@
                     };
 
                     margeryIdleLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_idle left_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryIdleLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_idle left_1.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryIdleRightFrames[0] = gameAssets['images/margery_limited (1)/margery_idle right_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryIdleRightFrames[1] = gameAssets['images/margery_limited (1)/margery_idle right_1.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryJumpLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_jump left_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryJumpRightFrames[0] = gameAssets['images/margery_limited (1)/margery_jump right_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_run left_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_run left_1.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[2] = gameAssets['images/margery_limited (1)/margery_run left_2.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[3] = gameAssets['images/margery_limited (1)/margery_run left_3.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[4] = gameAssets['images/margery_limited (1)/margery_run left_4.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunLeftFrames[5] = gameAssets['images/margery_limited (1)/margery_run left_5.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[0] = gameAssets['images/margery_limited (1)/margery_run right_0.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[1] = gameAssets['images/margery_limited (1)/margery_run right_1.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[2] = gameAssets['images/margery_limited (1)/margery_run right_2.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[3] = gameAssets['images/margery_limited (1)/margery_run right_3.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[4] = gameAssets['images/margery_limited (1)/margery_run right_4.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     margeryRunRightFrames[5] = gameAssets['images/margery_limited (1)/margery_run right_5.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     cutsceneImages[0] = gameAssets['images/cutscene1.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     cutsceneImages[1] = gameAssets['images/cutscene2.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     cutsceneImages[2] = gameAssets['images/cutscene3.png',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     // Now that all images are loaded, proceed with game initialization
@@ -2691,12 +2232,7 @@
         
         function initLevel1() {
             backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             stopAllMusic();
             currentLevel = 1; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
@@ -2707,39 +2243,19 @@
                 new Enemy(1200, currentGroundLevel, 'grunt'),
                 new Enemy(1440, currentGroundLevel, 'security')
             ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             levelBoss = null; environmentObjects = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; npc = null; updateUI();
             level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
         }
 
         function initLevel2() {
             backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             stopAllMusic();
             currentLevel = 2; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
@@ -2750,28 +2266,13 @@
                 new Enemy(1100, currentGroundLevel, 'security'),
                 new Enemy(1400, currentGroundLevel, 'grunt')
             ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; 
             levelBoss = null; projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; npc = null;
             environmentObjects = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             updateUI();
             level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
@@ -2781,12 +2282,7 @@
 
         function initLevel3() {
             backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             stopAllMusic();
             currentLevel = 3; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
@@ -2796,41 +2292,21 @@
                 new Enemy(1440, currentGroundLevel, 'heavy'), 
                 new Enemy(1680, currentGroundLevel, 'security')
             ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             levelBoss = null; projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; npc = new NPC(120, currentGroundLevel);
             environmentObjects = [ new EnvironmentObject(720, currentGroundLevel, 'chair') ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             updateUI();
-            level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
+            level3Music.play().catch(e => console.error("Error playing level 3 music:", e));
         }
 
         function initLevel4() {
             backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             stopAllMusic();
             currentLevel = 4; 
@@ -2845,27 +2321,12 @@
             currentGroundLevel = 580; // Highway perspective
             player.y = currentGroundLevel; // Start in middle lane
             enemies = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; levelBoss = null; projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; npc = null;
             environmentObjects = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             enemiesToSpawnInLevel2 = 20; // Reusing this counter for Level 5 now
             level2EnemySpawnTimer = 1500;
@@ -2875,17 +2336,13 @@
             level5CityOffset = 0;
             
             updateUI();
-            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+            level4Music.play().catch(e => console.error("Error playing level 4 music:", e));
+            ambientMusic1.play().catch(e => console.error("Error playing ambient music:", e));
         }
         
         function initLevel5() {
             backgroundElements = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             stopAllMusic();
             currentLevel = 5; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
@@ -2896,33 +2353,19 @@
                 new Enemy(1200, currentGroundLevel, 'heavy', 300),
                 new Enemy(1500, currentGroundLevel, 'heavy', 300)
             ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             levelBoss = null; projectiles = [,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; npc = null;
             environmentObjects = [ new EnvironmentObject(1080, 0, 'laser'), new EnvironmentObject(1320, 0, 'laser') ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             environmentObjects[0].width = 24; environmentObjects[1].width = 24;
             // Lasers now positioned between enemies for fair progression
             updateUI();
-            level2Music.play().catch(e => console.error("Error playing level 2 music:", e));
+            level5Music.play().catch(e => console.error("Error playing level 5 music:", e));
+            ambientMusic1.play().catch(e => console.error("Error playing ambient music:", e));
         }
 
 
@@ -2969,22 +2412,12 @@
                 'cutscenes/level_5_cutscene_dark-past-revealed.png',  // Was level 5, now level 4
                 'cutscenes/ending_cutscene.png'  // Was level 6, now level 5 (final)
             ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             
             if (currentLevel >= 1 && currentLevel <= 6) {
                 cutsceneImage = levelCutsceneImages[currentLevel - 1,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             }
 
@@ -3029,12 +2462,7 @@
                 if (player.lane === undefined) {
                     player.lane = 1; // Start in middle lane (index 1)
                     player.y = laneYPositions[player.lane,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 }
                 
@@ -3073,12 +2501,7 @@
                     // Check if landed back on lane
                     if (player.y >= laneYPositions[player.lane]) {
                         player.y = laneYPositions[player.lane,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         player.jumpCount = undefined;
                         player.jumpSpeed = 0;
@@ -3098,12 +2521,7 @@
                     player.frameTimer = 0;
                     
                     const anim = playerAnimations[player.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     player.attackCooldown = (anim.frames.length / 20) * 1000;
                     
@@ -3196,12 +2614,7 @@
         function performInteraction() {
             for (let i = environmentObjects.length - 1; i >= 0; i--) {
                 const obj = environmentObjects[i,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (obj.type !== 'destructible_wall' && obj.type !== 'laser' && Math.abs(player.x - obj.x) < 40) {
                     projectiles.push(new Projectile(player.x, player.y - 40, 360 * player.facing, -300, obj.type));
@@ -3246,12 +2659,7 @@
             player.hitActive = false;
             
             const anim = playerAnimations[player.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             let totalDuration = anim.durations ? anim.durations.reduce((a, b) => a + b, 0) : (anim.frames.length * 100);
             player.attackCooldown = totalDuration;
@@ -3301,12 +2709,7 @@
             if (player.state === 'death') {
                 player.frameTimer += deltaTime * 1000;
                 const anim = playerAnimations['death',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (player.currentFrame < anim.frames.length - 1) {
                     if (player.frameTimer >= 250) { // Fixed slow death
@@ -3367,23 +2770,13 @@
                     player.lane = player.targetLane;
                     player.laneChangeTimer = 0;
                     player.y = laneYPositions[player.lane,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 } else {
                     // Smoothly interpolate towards target lane
                     const t = 1.0 - (player.laneChangeTimer / 0.2); // 0 at start, 1 at end
                     const targetY = laneYPositions[player.targetLane,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     player.y = player.y + (targetY - player.y) * t;
                 }
@@ -3398,12 +2791,7 @@
             // Animation update with variable timing and hitbox checking
             player.frameTimer += deltaTime * 1000; 
             const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             let duration = animation.durations ? animation.durations[player.currentFrame] : (1000 / (animation.frameRate || 10));
 
@@ -3414,12 +2802,7 @@
                     'bike_shoot1', 'bike_shoot2', 'bike_shoot3', 'bike_shoot4',
                     'death', 'hurt'
                 ,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 
                 if (nonLooping.includes(player.currentAnimation)) {
@@ -3454,12 +2837,7 @@
             // Hitbox Detection
             if (animation.hitboxes && animation.hitboxes[player.currentFrame] && !player.hitActive) {
                 const hb = animation.hitboxes[player.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 const hitX = player.x + (hb.x * player.facing);
                 const hitY = player.y + hb.y;
@@ -3515,12 +2893,7 @@
             }
 
             const animation = playerAnimations[player.currentAnimation,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
             if (!animation) {
                 console.error("Missing animation:", player.currentAnimation);
@@ -3529,12 +2902,7 @@
             }
 
             const currentSprite = animation.spriteSheet[player.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ]; 
             
             // Perspective scaling for Level 5
@@ -3586,21 +2954,11 @@
 
                 // Attack hitbox
                 const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                 if (animation.hitboxes && animation.hitboxes[player.currentFrame]) {
                     const hb = animation.hitboxes[player.currentFrame,
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                     const hitX = player.x + (hb.x * player.facing);
                     const hitY = player.y + hb.y;
@@ -3814,12 +3172,7 @@
 
                     // Define lanes for enemy spawning (matching player lanes)
                     const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length),
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
 
                     // Spawn enemies from off-screen right at random lane
@@ -3832,29 +3185,14 @@
                     // Spawn obstacles in random lanes
                     level5ObstacleSpawnTimer -= deltaTime * 1000;
                     if (level5ObstacleSpawnTimer <= 0) {                        const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length),
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         // Spawn different types of obstacles
                         const obstacleTypes = ['barrel', 'roadblock', 'spikes',
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length),
-            'Music/neon nights.mp3',
-            'Music/neon strut.mp3',
-            'Music/pixelated groove machine.mp3',
-            'Music/shadows and smoke - rock rnb.mp3',
-            'Music/Waiting_at_the_Gate.mp3',
-            'Music/The_Unseen_Cathedral.mp3'
+                                                                        
         ];
                         environmentObjects.push(new EnvironmentObject(canvas.width + 100, randomLane, obstacleType));
                         level5ObstacleSpawnTimer = 1500 + Math.random() * 1000;
