@@ -373,26 +373,19 @@
         // Margery Animation Frames
         let margeryIdleLeftFrames = [,
                                                                         
-        ];
         let margeryIdleRightFrames = [,
                                                                         
-        ];
         let margeryJumpLeftFrames = [,
                                                                         
-        ];
         let margeryJumpRightFrames = [,
                                                                         
-        ];
         let margeryRunLeftFrames = [,
                                                                         
-        ];
         let margeryRunRightFrames = [,
                                                                         
-        ];
 
         let cutsceneImages = [,
                                                                         
-        ];
 
         const margeryAnimations = {
             idleLeft: { spriteSheet: margeryIdleLeftFrames, frames: [0, 1], frameRate: 4 },
@@ -458,7 +451,6 @@
             'images/margery_limited (1)/margery_run right_0.png', 'images/margery_limited (1)/margery_run right_1.png', 'images/margery_limited (1)/margery_run right_2.png', 'images/margery_limited (1)/margery_run right_3.png', 'images/margery_limited (1)/margery_run right_4.png', 'images/margery_limited (1)/margery_run right_5.png'
         ,
                                                                         
-        ];
         
         let currentLevel = 0;
         const startScreenMusic = new Audio('Music/pixelated groove machine.mp3');
@@ -545,81 +537,56 @@
         // Jack Rebourne Frame Arrays
         let drJackIdleFrames = [,
                                                                         
-        ];
         let drJackRunFrames = [,
                                                                         
-        ];
         let drJackJumpUpFrames = [,
                                                                         
-        ];
         let drJackJumpAirFrames = [,
                                                                         
-        ];
         let drJackJumpLandFrames = [,
                                                                         
-        ];
         let drJackJabFrames = [,
                                                                         
-        ];
         let drJackPunchFrames = [,
                                                                         
-        ];
         let drJackRightKickFrames = [,
                                                                         
-        ];
         let drJackUppercutFrames = [,
                                                                         
-        ];
         let drJackLeftKickFrames = [,
                                                                         
-        ];
         let drJackJumpAttack1Frames = [,
                                                                         
-        ];
         let drJackJumpAttack2Frames = [,
                                                                         
-        ];
         let drJackBikeFrames = [,
                                                                         
-        ];
         let drJackBikeShoot1Frames = [,
                                                                         
-        ];
         let drJackBikeShoot2Frames = [,
                                                                         
-        ];
         let drJackBikeShoot3Frames = [,
                                                                         
-        ];
         let drJackBikeShoot4Frames = [,
                                                                         
-        ];
         let drJackHurtFrames = [,
                                                                         
-        ];
         let drJackDeathFrames = [,
                                                                         
-        ];
 
         // Enemy Frame Arrays
         let gruntWalkFrames = [,
                                                                         
-        ];
         let gruntPunchFrames = [,
                                                                         
-        ];
         let gruntKickFrames = [,
                                                                         
-        ];
         let securityWalkFrames = [,
                                                                         
-        ];
         let securityPunchFrames = [,
                                                                         
-        ];
         let securityBatFrames = [,
                                                                         
-        ];
 
         let gameState = 'title';
         
@@ -679,7 +646,6 @@
                 { id: 'mc-jump', key: 'arrowup' },
                 { id: 'mc-punch', key: 'z' },
                 { id: 'mc-kick', key: 'x' }
-            ];
 
             controls.forEach(control => {
                 const button = document.getElementById(control.id);
@@ -699,21 +665,16 @@
         
         let enemies = [,
                                                                         
-        ];
         let levelBoss = null;
         let environmentObjects = [,
                                                                         
-        ];
         let projectiles = [,
                                                                         
-        ];
         let npc = null;
         let backgroundElements = [,
                                                                         
-        ];
         let particles = [,
                                                                         
-        ];
 
         class Particle {
             constructor(x, y, type) {
@@ -893,9 +854,7 @@
 
                 // Update animation frame
                 this.frameTimer += deltaTime;
-                const animation = margeryAnimations[this.currentAnimation,
-                                                                        
-        ];
+                const animation = margeryAnimations[this.currentAnimation];
                 if (this.frameTimer >= 1 / animation.frameRate) {
                     this.currentFrame = (this.currentFrame + 1) % animation.frames.length;
                     this.frameTimer = 0;
@@ -903,12 +862,9 @@
             }
             draw() {
                 ctx.save();
-                const animation = margeryAnimations[this.currentAnimation,
+                const animation = margeryAnimations[this.currentAnimation];
+                const currentSprite = animation.spriteSheet[this.currentFrame];
                                                                         
-        ];
-                const currentSprite = animation.spriteSheet[this.currentFrame,
-                                                                        
-        ];
                 if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
                     // Draw the sprite
                     ctx.drawImage(currentSprite, this.x - this.width / 2, this.y - this.height, this.width, this.height);
@@ -1159,7 +1115,6 @@
                     this.frameTimer += deltaTime;
                     const anim = this.animations[this.currentAnimation,
                                                                         
-        ];
                     if (this.frameTimer >= 1 / anim.frameRate) {
                         this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
                         this.frameTimer = 0;
@@ -1213,7 +1168,6 @@
                 this.frameTimer += deltaTime;
                 const anim = this.animations[this.currentAnimation,
                                                                         
-        ];
                 if (this.frameTimer >= 1 / anim.frameRate) {
                     this.currentFrame = (this.currentFrame + 1) % anim.frames.length;
                     this.frameTimer = 0;
@@ -1336,10 +1290,8 @@
                         if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
                         const anim = this.animations[this.currentAnimation,
                                                                         
-        ];
                         const currentSprite = anim.spriteSheet[this.currentFrame,
                                                                         
-        ];
                         if (currentSprite && currentSprite.complete) {
                             ctx.drawImage(currentSprite, -w/2, -h, w, h);
                         } else {
@@ -1352,10 +1304,8 @@
                         if (this.hitFlash > 0) ctx.filter = 'brightness(100) contrast(100)';
                         const anim = this.animations[this.currentAnimation,
                                                                         
-        ];
                         const currentSprite = anim.spriteSheet[this.currentFrame,
                                                                         
-        ];
                         if (currentSprite && currentSprite.complete) {
                             ctx.drawImage(currentSprite, -w/2, -h, w, h);
                         } else {
@@ -1372,10 +1322,8 @@
                 } else {
                     const anim = this.animations[this.currentAnimation,
                                                                         
-        ];
                     const currentSprite = anim.spriteSheet[this.currentFrame,
                                                                         
-        ];
                     if (currentSprite && currentSprite.complete) {
                         if (this.facing === -1) {
                             ctx.translate(this.x + w / 2, this.y);
@@ -1778,21 +1726,16 @@
                     gameAssets = assets; // Store loaded assets globally
                     level1BackgroundImage = gameAssets['images/level_1_background.gif',
                                                                         
-        ];
                     level2RooftopBackgroundImage = gameAssets['images/google_ai_studio_2025-09-01t15_32_37.197z.png',
                                                                         
-        ];
                                         level4SunsetBackgroundImage = gameAssets['images/level_4_sunset.png',
                                                                         
-        ];
                     level5TruckBackgroundImage = gameAssets['images/level_2_truck.png',
                                                                         
-        ];
 
                     // Jack Rebourne Assets
                     drJackIdleFrames[0] = gameAssets['jack_rebourne_sprites/idle_jack.png',
                                                                         
-        ];
                     
                     drJackRunFrames = [
                         gameAssets['jack_rebourne_sprites/run/frame_000.png'], gameAssets['jack_rebourne_sprites/run/frame_001.png'],
@@ -1802,77 +1745,65 @@
                         gameAssets['jack_rebourne_sprites/run/frame_008.png'], gameAssets['jack_rebourne_sprites/run/frame_009.png']
                     ,
                                                                         
-        ];
 
                     drJackJumpUpFrames = [
                         gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_0.png'], 
                         gameAssets['jack_rebourne_sprites/jump/1.jump_up/frame_01png.png']
                     ,
                                                                         
-        ];
                     drJackJumpAirFrames = [
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_02_air.png'],
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_03_air.png'],
                         gameAssets['jack_rebourne_sprites/jump/2.air/frame_04_air.png']
                     ,
                                                                         
-        ];
                     drJackJumpLandFrames = [
                         gameAssets['jack_rebourne_sprites/jump/3.land/frame_05_land.png'],
                         gameAssets['jack_rebourne_sprites/jump/3.land/frame_06_land.png']
                     ,
                                                                         
-        ];
 
                     drJackJabFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_001.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_003.png'], gameAssets['jack_rebourne_sprites/attack_combo/1.jab/frame_004.png']
                     ,
                                                                         
-        ];
                     drJackPunchFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/2.right_punch/frame_002.png']
                     ,
                                                                         
-        ];
                     drJackRightKickFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/3.right_kick/frame_003.png']
                     ,
                                                                         
-        ];
                     drJackUppercutFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_01.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_02.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/4.right_uppercut/frame_03.png']
                     ,
                                                                         
-        ];
                     drJackLeftKickFrames = [
                         gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_001.png'],
                         gameAssets['jack_rebourne_sprites/attack_combo/5.left_kick/frame_002.png']
                     ,
                                                                         
-        ];
 
                     drJackJumpAttack1Frames = [
                         gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_000.png'],
                         gameAssets['jack_rebourne_sprites/jump_attack/hit1/frame_001.png']
                     ,
                                                                         
-        ];
                     drJackJumpAttack2Frames = [
                         gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_002.png'],
                         gameAssets['jack_rebourne_sprites/jump_attack/hit2/frame_003.png']
                     ,
                                                                         
-        ];
 
                     drJackBikeFrames = [,
                                                                         
-        ];
                     for(let i=0; i<15; i++) {
                         let num = i.toString().padStart(3, '0');
                         drJackBikeFrames.push(gameAssets[`jack_rebourne_sprites/bike/frame_${num}.png`]);
@@ -1884,26 +1815,22 @@
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot1/frame_003.png']
                     ,
                                                                         
-        ];
                     drJackBikeShoot2Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_004.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_005.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot2/frame_006.png']
                     ,
                                                                         
-        ];
                     drJackBikeShoot3Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_007.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_008.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_009.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot3/frame_010.png']
                     ,
                                                                         
-        ];
                     drJackBikeShoot4Frames = [
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_011.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_012.png'],
                         gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_013.png'], gameAssets['jack_rebourne_sprites/bike_shoot/shot4/frame_014.png']
                     ,
                                                                         
-        ];
 
                     drJackHurtFrames = [
                         gameAssets['jack_rebourne_sprites/hurt/frame_001.png'], gameAssets['jack_rebourne_sprites/hurt/frame_002.png'],
@@ -1911,18 +1838,15 @@
                         gameAssets['jack_rebourne_sprites/hurt/frame_005.png']
                     ,
                                                                         
-        ];
                     drJackDeathFrames = [
                         gameAssets['jack_rebourne_sprites/hurt/frame_006_fall.png'],
                         gameAssets['jack_rebourne_sprites/hurt/frame_010_death.png']
                     ,
                                                                         
-        ];
 
                     // Enemy Assets
                     gruntWalkFrames = [,
                                                                         
-        ];
                     for(let i=0; i<7; i++) gruntWalkFrames.push(gameAssets[`new_enemies/grunt/grunt_walk/frame_00${i}.png`]);
                     
                     gruntPunchFrames = [
@@ -1931,18 +1855,15 @@
                         gameAssets['new_enemies/grunt/grunt_attack/punch/frame_002.png']
                     ,
                                                                         
-        ];
                     gruntKickFrames = [
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_000.png'],
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_003.png'],
                         gameAssets['new_enemies/grunt/grunt_attack/kick/frame_004.png']
                     ,
                                                                         
-        ];
 
                     securityWalkFrames = [,
                                                                         
-        ];
                     for(let i=0; i<5; i++) securityWalkFrames.push(gameAssets[`new_enemies/security/walk/frame_00${i}.png`]);
 
                     securityPunchFrames = [
@@ -1951,13 +1872,11 @@
                         gameAssets['new_enemies/security/attack_punch/frame_008.png']
                     ,
                                                                         
-        ];
                     securityBatFrames = [
                         gameAssets['new_enemies/security/attack_bat/frame_005.png'],
                         gameAssets['new_enemies/security/attack_bat/frame_006.png']
                     ,
                                                                         
-        ];
 
         // Define animations with variable frame durations (ms) and frame-specific hitboxes
                     playerAnimations = {
@@ -2027,68 +1946,47 @@
 
                     margeryIdleLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_idle left_0.png',
                                                                         
-        ];
                     margeryIdleLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_idle left_1.png',
                                                                         
-        ];
                     margeryIdleRightFrames[0] = gameAssets['images/margery_limited (1)/margery_idle right_0.png',
                                                                         
-        ];
                     margeryIdleRightFrames[1] = gameAssets['images/margery_limited (1)/margery_idle right_1.png',
                                                                         
-        ];
                     margeryJumpLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_jump left_0.png',
                                                                         
-        ];
                     margeryJumpRightFrames[0] = gameAssets['images/margery_limited (1)/margery_jump right_0.png',
                                                                         
-        ];
                     margeryRunLeftFrames[0] = gameAssets['images/margery_limited (1)/margery_run left_0.png',
                                                                         
-        ];
                     margeryRunLeftFrames[1] = gameAssets['images/margery_limited (1)/margery_run left_1.png',
                                                                         
-        ];
                     margeryRunLeftFrames[2] = gameAssets['images/margery_limited (1)/margery_run left_2.png',
                                                                         
-        ];
                     margeryRunLeftFrames[3] = gameAssets['images/margery_limited (1)/margery_run left_3.png',
                                                                         
-        ];
                     margeryRunLeftFrames[4] = gameAssets['images/margery_limited (1)/margery_run left_4.png',
                                                                         
-        ];
                     margeryRunLeftFrames[5] = gameAssets['images/margery_limited (1)/margery_run left_5.png',
                                                                         
-        ];
                     margeryRunRightFrames[0] = gameAssets['images/margery_limited (1)/margery_run right_0.png',
                                                                         
-        ];
                     margeryRunRightFrames[1] = gameAssets['images/margery_limited (1)/margery_run right_1.png',
                                                                         
-        ];
                     margeryRunRightFrames[2] = gameAssets['images/margery_limited (1)/margery_run right_2.png',
                                                                         
-        ];
                     margeryRunRightFrames[3] = gameAssets['images/margery_limited (1)/margery_run right_3.png',
                                                                         
-        ];
                     margeryRunRightFrames[4] = gameAssets['images/margery_limited (1)/margery_run right_4.png',
                                                                         
-        ];
                     margeryRunRightFrames[5] = gameAssets['images/margery_limited (1)/margery_run right_5.png',
                                                                         
-        ];
 
                     cutsceneImages[0] = gameAssets['images/cutscene1.png',
                                                                         
-        ];
                     cutsceneImages[1] = gameAssets['images/cutscene2.png',
                                                                         
-        ];
                     cutsceneImages[2] = gameAssets['images/cutscene3.png',
                                                                         
-        ];
 
                     // Now that all images are loaded, proceed with game initialization
                     startOpeningCutscene();
@@ -2233,7 +2131,6 @@
         function initLevel1() {
             backgroundElements = [,
                                                                         
-        ];
             stopAllMusic();
             currentLevel = 1; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -2244,7 +2141,6 @@
                 new Enemy(1440, currentGroundLevel, 'security')
             ,
                                                                         
-        ];
             levelBoss = null; environmentObjects = [,
                                                                         
         ]; projectiles = [,
@@ -2256,7 +2152,6 @@
         function initLevel2() {
             backgroundElements = [,
                                                                         
-        ];
             stopAllMusic();
             currentLevel = 2; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 620; // Lower floor for the rooftop/factory image
@@ -2267,13 +2162,11 @@
                 new Enemy(1400, currentGroundLevel, 'grunt')
             ,
                                                                         
-        ]; 
             levelBoss = null; projectiles = [,
                                                                         
         ]; npc = null;
             environmentObjects = [,
                                                                         
-        ];
             updateUI();
             level1Music.play().catch(e => console.error("Error playing level 1 music:", e));
         }
@@ -2283,7 +2176,6 @@
         function initLevel3() {
             backgroundElements = [,
                                                                         
-        ];
             stopAllMusic();
             currentLevel = 3; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -2293,13 +2185,11 @@
                 new Enemy(1680, currentGroundLevel, 'security')
             ,
                                                                         
-        ];
             levelBoss = null; projectiles = [,
                                                                         
         ]; npc = new NPC(120, currentGroundLevel);
             environmentObjects = [ new EnvironmentObject(720, currentGroundLevel, 'chair') ,
                                                                         
-        ];
             updateUI();
             level3Music.play().catch(e => console.error("Error playing level 3 music:", e));
         }
@@ -2307,7 +2197,6 @@
         function initLevel4() {
             backgroundElements = [,
                                                                         
-        ];
             stopAllMusic();
             currentLevel = 4; 
             player.x = 200; 
@@ -2327,7 +2216,6 @@
         ]; npc = null;
             environmentObjects = [,
                                                                         
-        ];
             enemiesToSpawnInLevel2 = 20; // Reusing this counter for Level 5 now
             level2EnemySpawnTimer = 1500;
             
@@ -2343,7 +2231,6 @@
         function initLevel5() {
             backgroundElements = [,
                                                                         
-        ];
             stopAllMusic();
             currentLevel = 5; player.x = 100; player.y = currentGroundLevel; player.health = 100; player.energy = 0;
             currentGroundLevel = 540;
@@ -2354,13 +2241,11 @@
                 new Enemy(1500, currentGroundLevel, 'heavy', 300)
             ,
                                                                         
-        ];
             levelBoss = null; projectiles = [,
                                                                         
         ]; npc = null;
             environmentObjects = [ new EnvironmentObject(1080, 0, 'laser'), new EnvironmentObject(1320, 0, 'laser') ,
                                                                         
-        ];
             environmentObjects[0].width = 24; environmentObjects[1].width = 24;
             // Lasers now positioned between enemies for fair progression
             updateUI();
@@ -2413,12 +2298,10 @@
                 'cutscenes/ending_cutscene.png'  // Was level 6, now level 5 (final)
             ,
                                                                         
-        ];
             
             if (currentLevel >= 1 && currentLevel <= 6) {
                 cutsceneImage = levelCutsceneImages[currentLevel - 1,
                                                                         
-        ];
             }
 
             if (currentLevel === 1) {
@@ -2463,7 +2346,6 @@
                     player.lane = 1; // Start in middle lane (index 1)
                     player.y = laneYPositions[player.lane,
                                                                         
-        ];
                 }
                 
                 // Horizontal movement (forward/backward)
@@ -2502,7 +2384,6 @@
                     if (player.y >= laneYPositions[player.lane]) {
                         player.y = laneYPositions[player.lane,
                                                                         
-        ];
                         player.jumpCount = undefined;
                         player.jumpSpeed = 0;
                         if (player.state === 'jumping') {
@@ -2522,7 +2403,6 @@
                     
                     const anim = playerAnimations[player.currentAnimation,
                                                                         
-        ];
                     player.attackCooldown = (anim.frames.length / 20) * 1000;
                     
                     projectiles.push(new Projectile(player.x + 60 * player.facing, player.y - 45, 1800 * player.facing, 0, 'bike_shot'));
@@ -2615,7 +2495,6 @@
             for (let i = environmentObjects.length - 1; i >= 0; i--) {
                 const obj = environmentObjects[i,
                                                                         
-        ];
                 if (obj.type !== 'destructible_wall' && obj.type !== 'laser' && Math.abs(player.x - obj.x) < 40) {
                     projectiles.push(new Projectile(player.x, player.y - 40, 360 * player.facing, -300, obj.type));
                     environmentObjects.splice(i, 1);
@@ -2660,7 +2539,6 @@
             
             const anim = playerAnimations[player.currentAnimation,
                                                                         
-        ];
             let totalDuration = anim.durations ? anim.durations.reduce((a, b) => a + b, 0) : (anim.frames.length * 100);
             player.attackCooldown = totalDuration;
         }
@@ -2710,7 +2588,6 @@
                 player.frameTimer += deltaTime * 1000;
                 const anim = playerAnimations['death',
                                                                         
-        ];
                 if (player.currentFrame < anim.frames.length - 1) {
                     if (player.frameTimer >= 250) { // Fixed slow death
                         player.currentFrame++;
@@ -2771,13 +2648,11 @@
                     player.laneChangeTimer = 0;
                     player.y = laneYPositions[player.lane,
                                                                         
-        ];
                 } else {
                     // Smoothly interpolate towards target lane
                     const t = 1.0 - (player.laneChangeTimer / 0.2); // 0 at start, 1 at end
                     const targetY = laneYPositions[player.targetLane,
                                                                         
-        ];
                     player.y = player.y + (targetY - player.y) * t;
                 }
             }
@@ -2792,7 +2667,6 @@
             player.frameTimer += deltaTime * 1000; 
             const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle',
                                                                         
-        ];
             let duration = animation.durations ? animation.durations[player.currentFrame] : (1000 / (animation.frameRate || 10));
 
             if (player.frameTimer >= duration) {
@@ -2803,7 +2677,6 @@
                     'death', 'hurt'
                 ,
                                                                         
-        ];
                 
                 if (nonLooping.includes(player.currentAnimation)) {
                     if (player.currentFrame < animation.frames.length - 1) {
@@ -2838,7 +2711,6 @@
             if (animation.hitboxes && animation.hitboxes[player.currentFrame] && !player.hitActive) {
                 const hb = animation.hitboxes[player.currentFrame,
                                                                         
-        ];
                 const hitX = player.x + (hb.x * player.facing);
                 const hitY = player.y + hb.y;
                 const hitWidth = hb.w;
@@ -2894,7 +2766,6 @@
 
             const animation = playerAnimations[player.currentAnimation,
                                                                         
-        ];
             if (!animation) {
                 console.error("Missing animation:", player.currentAnimation);
                 ctx.restore();
@@ -2903,7 +2774,6 @@
 
             const currentSprite = animation.spriteSheet[player.currentFrame,
                                                                         
-        ]; 
             
             // Perspective scaling for Level 5
             let scale = 1.0;
@@ -2955,11 +2825,9 @@
                 // Attack hitbox
                 const animation = playerAnimations[player.currentAnimation] || playerAnimations['idle',
                                                                         
-        ];
                 if (animation.hitboxes && animation.hitboxes[player.currentFrame]) {
                     const hb = animation.hitboxes[player.currentFrame,
                                                                         
-        ];
                     const hitX = player.x + (hb.x * player.facing);
                     const hitY = player.y + hb.y;
                     ctx.strokeStyle = player.hitActive ? 'red' : 'yellow';
@@ -3173,7 +3041,6 @@
                     // Define lanes for enemy spawning (matching player lanes)
                     const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length),
                                                                         
-        ];
 
                     // Spawn enemies from off-screen right at random lane
                     level2EnemySpawnTimer -= deltaTime * 1000;
@@ -3186,14 +3053,11 @@
                     level5ObstacleSpawnTimer -= deltaTime * 1000;
                     if (level5ObstacleSpawnTimer <= 0) {                        const randomLane = laneYPositions[Math.floor(Math.random() * laneYPositions.length),
                                                                         
-        ];
                         // Spawn different types of obstacles
                         const obstacleTypes = ['barrel', 'roadblock', 'spikes',
                                                                         
-        ];
                         const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length),
                                                                         
-        ];
                         environmentObjects.push(new EnvironmentObject(canvas.width + 100, randomLane, obstacleType));
                         level5ObstacleSpawnTimer = 1500 + Math.random() * 1000;
                     }
